@@ -25,6 +25,11 @@ pub async fn systems() {
             100.0,
             120.0,
         )
+        .with_component_switch(
+            "Component 1".to_string(),
+            "Component 1 Switch".to_string(),
+            "L:OBJ_SWITCH_1".to_string(),
+        )
         .with_battery(
             "BATT1".to_string(),
             28.0,

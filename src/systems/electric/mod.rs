@@ -59,6 +59,24 @@ impl ElectricalSystem {
         self
     }
 
+    pub fn with_component_switch(
+        mut self,
+        component_name: String,
+        switch_name: String,
+        switch_var: String,
+    ) -> Self {
+        if let Some(last_bus) = self.busses.last_mut() {
+            if let Some(component) = last_bus
+                .components
+                .iter_mut()
+                .find(|c| c.name == component_name)
+            {
+                component.switch = Some((switch_name, switch_var));
+            }
+        }
+        self
+    }
+
     pub fn with_battery(
         mut self,
         name: String,
@@ -85,5 +103,9 @@ impl ElectricalSystem {
 
     pub fn build(self) -> Self {
         self
+    }
+
+    pub fn get_system_results(&self) {
+        // need to create a type and return required voltages:f64 and electronics state:boolean for every component in the system on call
     }
 }

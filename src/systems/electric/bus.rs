@@ -3,7 +3,7 @@ use super::{components::Component, current_type::CurrentType};
 #[derive(Debug)]
 pub struct Bus {
     name: String,
-    components: Vec<Component>,
+    pub components: Vec<Component>,
     var: String,
     current_type: CurrentType,
     voltage: f64,
