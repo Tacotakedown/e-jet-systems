@@ -2,18 +2,18 @@
 
 #[derive(Debug, Clone)]
 pub struct Actuator {
-    pistonCount: f64,
-    pistonRadius: f64,
-    pistonExtension: f64,
+    piston_count: f64,
+    piston_radius: f64,
+    piston_extension: f64,
     // hydraulic arc mutex
 }
 
 impl Actuator {
-    pub fn new(pistonCount: f64, pistonRadius: f64, pistonExtension: f64) -> Self {
+    pub fn new(piston_count: f64, piston_radius: f64, piston_extension: f64) -> Self {
         Self {
-            pistonCount,
-            pistonRadius,
-            pistonExtension,
+            piston_count,
+            piston_radius,
+            piston_extension,
         }
     }
 }

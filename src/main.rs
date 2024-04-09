@@ -3,6 +3,7 @@ use tokio::task;
 use tokio::time::sleep;
 
 use crate::nav_server::api_factory;
+use crate::systems::{brake_system, electrical};
 
 mod nav_server;
 mod simconnect;
@@ -19,8 +20,8 @@ async fn log_time(name: &'static str) {
 
 #[tokio::main]
 async fn main() {
-    let task1 = task::spawn(log_time("Thread 1"));
-    let task2 = task::spawn(log_time("Thread 2"));
+    let task1 = task::spawn(brake_system());
+    let task2 = task::spawn(electrical());
 
     let api_thread = task::spawn(api_factory());
 
