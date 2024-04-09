@@ -1,4 +1,9 @@
-use self::electric::{busses::Busses, current_type::CurrentType, ElectricalSystem};
+use self::{
+    brakes::brake_location::BrakePosition,
+    brakes::brake_materials::BrakeMaterials,
+    brakes::BrakeSystem,
+    electric::{busses::Busses, current_type::CurrentType, ElectricalSystem},
+};
 
 pub mod brakes;
 pub mod electric;
@@ -28,7 +33,7 @@ pub async fn systems() {
         .with_component_switch(
             "Component 1".to_string(),
             "Component 1 Switch".to_string(),
-            "L:OBJ_SWITCH_1".to_string(),
+            true,
         )
         .with_battery(
             "BATT1".to_string(),
@@ -42,5 +47,22 @@ pub async fn systems() {
             5000.0,
             vec![Busses::AcBus1, Busses::AcBus2],
         )
+        .build();
+
+    let brake_system = BrakeSystem::new()
+        .with_assembly(BrakePosition::LeftMain)
+        .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
+        .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
+        .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
+        .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
+        .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
+        .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
+        .with_assembly(BrakePosition::RightMain)
+        .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
+        .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
+        .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
+        .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
+        .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
+        .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
         .build();
 }

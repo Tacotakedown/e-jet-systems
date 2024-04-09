@@ -7,7 +7,7 @@ pub struct Component {
     required_voltage: f64,  // volts
     power_consumption: f64, // watts
     current_type: CurrentType,
-    pub switch: Option<(String, String)>,
+    pub switch: Option<(String, bool)>,
 }
 
 impl Component {
@@ -33,6 +33,9 @@ impl Component {
     }
 
     pub fn is_component_on(&self, voltage: f64) -> bool {
-        self.required_voltage < voltage
+        if let Some((_, switch_value)) = self.switch {
+            return switch_value && (self.required_voltage < voltage);
+        }
+        false
     }
 }

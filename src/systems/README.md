@@ -1,0 +1,3 @@
+### functionality of this mod:
+
+this mod houses all the systems (hence the name) and should run completely indepent of the sim, meaning its forbidden to use anything like simconnect or other sim related calls outside of `mod.rs`. All sim parsing and sending will be handled by the `simconnect` module which will expose functions for getting and setting all the proper simvars here. All systems in this module need to be constructed with parsed simvars from the sim and return a result every tick that we can update the sim with. Structs for construction and results will need to be created per aircraft to ensure all simvars are properly fed to system calculations and updated each tick.

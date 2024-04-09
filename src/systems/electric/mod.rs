@@ -63,7 +63,7 @@ impl ElectricalSystem {
         mut self,
         component_name: String,
         switch_name: String,
-        switch_var: String,
+        switch_state: bool,
     ) -> Self {
         if let Some(last_bus) = self.busses.last_mut() {
             if let Some(component) = last_bus
@@ -71,7 +71,7 @@ impl ElectricalSystem {
                 .iter_mut()
                 .find(|c| c.name == component_name)
             {
-                component.switch = Some((switch_name, switch_var));
+                component.switch = Some((switch_name, switch_state));
             }
         }
         self
