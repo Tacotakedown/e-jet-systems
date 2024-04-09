@@ -10,6 +10,7 @@ pub mod components;
 pub mod consumption;
 pub mod current_type;
 pub mod generator;
+pub mod inverter;
 pub mod transformer;
 
 #[derive(Debug)]
@@ -81,10 +82,19 @@ impl ElectricalSystem {
         mut self,
         name: String,
         voltage: f64,
+        voltage_min_max: (f64, f64),
         capacity: f64,
         connected_busses: Vec<Busses>,
+        max_charge_discharge_rate: (f64, f64),
     ) -> Self {
-        let battery = Battery::new(name, voltage, capacity, connected_busses);
+        let battery = Battery::new(
+            name,
+            voltage,
+            voltage_min_max,
+            capacity,
+            connected_busses,
+            max_charge_discharge_rate,
+        );
         self.batteries.push(battery);
         self
     }

@@ -7,8 +7,12 @@ use self::{
 
 pub mod brakes;
 pub mod electric;
+pub mod fuel;
 pub mod hydraulic;
+pub mod reverse_thrust;
 pub mod shared;
+pub mod air_conditioning;
+pub mod pneumatic;
 
 pub async fn electrical() -> ElectricalSystem {
     let electrical_system = ElectricalSystem::new()
@@ -37,9 +41,11 @@ pub async fn electrical() -> ElectricalSystem {
         )
         .with_battery(
             "BATT1".to_string(),
-            28.0,
+            30.,
+            (0.0, 28.0),
             6000.0,
             vec![Busses::HotBatBus1, Busses::HotBatBus2],
+            (-10.0, 10.0),
         )
         .with_generator(
             "ENG1".to_string(),
