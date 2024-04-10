@@ -5,14 +5,15 @@ use self::{
     electric::{busses::Busses, current_type::CurrentType, ElectricalSystem},
 };
 
+pub mod air_conditioning;
 pub mod brakes;
 pub mod electric;
+pub mod flight_controls;
 pub mod fuel;
 pub mod hydraulic;
+pub mod pneumatic;
 pub mod reverse_thrust;
 pub mod shared;
-pub mod air_conditioning;
-pub mod pneumatic;
 
 pub async fn electrical() -> ElectricalSystem {
     let electrical_system = ElectricalSystem::new()
