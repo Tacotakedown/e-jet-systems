@@ -8,9 +8,11 @@ pub mod bus;
 pub mod busses;
 pub mod components;
 pub mod consumption;
+pub mod control_centers;
 pub mod current_type;
 pub mod generator;
 pub mod inverter;
+pub mod resistor;
 pub mod transformer;
 
 #[derive(Debug)]

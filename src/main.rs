@@ -8,6 +8,7 @@ use crate::systems::{brake_system, electrical};
 mod nav_server;
 mod simconnect;
 mod systems;
+mod terrain_radar;
 
 async fn log_time(name: &'static str) {
     loop {
