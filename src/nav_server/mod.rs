@@ -1,5 +1,8 @@
 use warp::Filter;
 
+pub mod lnav;
+pub mod vnav;
+
 pub async fn api_factory() {
     let test = warp::path!("test" / String).map(|args: String| format!("Your arguments: {}", args));
 
