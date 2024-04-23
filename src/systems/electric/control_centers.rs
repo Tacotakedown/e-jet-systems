@@ -1,7 +1,7 @@
 use core::fmt;
 use std::collections::HashMap;
 
-use super::bus::Bus;
+use super::{bus::Bus, transformer::Transformer};
 
 #[derive(Debug)]
 pub enum EControlCenters {
@@ -37,5 +37,5 @@ impl EControlCenters {
 pub struct ControlCenters {
     busses: Vec<Bus>,
     connections: HashMap<String, String>,
-    transformer: Vec,
+    transformer: Vec<Transformer>,
 }

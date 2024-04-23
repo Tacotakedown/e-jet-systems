@@ -48,7 +48,7 @@ impl FlightControls {
     // Ob full def on touchdown, in air work as spoileron
     //
 
-    pub fn build(&mut self) -> Self {
+    pub fn build(self) -> Self {
         self
     }
 }

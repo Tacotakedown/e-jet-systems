@@ -11,6 +11,7 @@ pub mod friction;
 pub mod pressure_plate;
 pub mod stator;
 
+#[derive(Debug)]
 pub struct BrakeSystem {
     assemblies: Vec<BrakeAssembly>,
 }

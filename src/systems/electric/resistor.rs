@@ -17,7 +17,7 @@ impl Resistor {
     pub fn set_input(&mut self, input: f64) {
         self.input = input
     }
-    pub fn calculate_output(&mut self) -> f64 {
+    pub fn calculate_output(&mut self) {
         self.output = self.input * (self.resistance / (self.resistance + self.input))
     }
     pub fn get_output(&self) -> f64 {

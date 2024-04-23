@@ -56,7 +56,10 @@ pub async fn electrical() -> ElectricalSystem {
         )
         .build();
 
-    electrical_system
+    loop {
+        // TODO: call the implemented electrical_system.calculate() here and feed it the proper mutex vars
+        println!("electrical system: {:?}", electrical_system);
+    }
 }
 
 pub async fn brake_system() -> BrakeSystem {
@@ -79,5 +82,8 @@ pub async fn brake_system() -> BrakeSystem {
         .with_actuator(6.0, 5.0, 3.0)
         .build();
 
-    brake_system
+    loop {
+        // TODO: call the implemented brake_system.calculate() here and feed it the proper mutex vars
+        println!("brake: {:?}", brake_system);
+    }
 }

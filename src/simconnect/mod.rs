@@ -1,6 +1,6 @@
 use std::env::Vars;
 
-use crate::MutexVariables;
+use crate::mutex::{self, MutexVariables};
 
 pub mod simvars;
 
@@ -14,16 +14,16 @@ impl Simconnect {
         Self { id }
     }
 
-    fn write_simconnect(vars: Vec<(String, String, f64)>) {
+    fn write_simconnect(vars: Vec<(String, f64, String)>) {
         for (var, unit, value) in vars {
             // Simconnect.write(var, unit, value);
         }
     }
-    pub async fn update(self, vars: Vec<(String, String)>, values: MutexVariables) {
+    pub async fn update(self, values: MutexVariables) {
         loop {
-            // TODO: lock mutex values and build a Vec with proper name, unit and value for writing
-            let vars = vars.clone();
-            // Self::write_simconnect(vars);
+            let parsed: Vec<(String, f64, String)> = mutex::get_values(values.clone()).await;
+
+            Self::write_simconnect(parsed);
 
             //TODO: read from a list of simvars that are expected to change within the sim, these should all be user input vars like switches because all data is shared inside the simulation already
             tokio::time::sleep(tokio::time::Duration::from_millis(13));

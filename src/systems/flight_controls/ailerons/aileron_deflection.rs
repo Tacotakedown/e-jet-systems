@@ -1,3 +1,4 @@
+#[derive(Debug, Clone, Copy)]
 struct AileronInterpolation {
     yoke_input: f64,
     left_aileron: f64,
@@ -124,7 +125,7 @@ pub fn get_required_aileron_deflection(yoke_input: f64) -> (f64, f64) {
                 (INTERPOLATION_POINTS[indx - 1], INTERPOLATION_POINTS[indx])
             }
         })
-        .unwrap_or((INTERPOLATION_POINTS[16], INTERPOLATION_POINTS[17]));
+        .unwrap_or((INTERPOLATION_POINTS[15], INTERPOLATION_POINTS[16]));
 
     let t = (yoke_input - lower.yoke_input) / (upper.yoke_input - lower.yoke_input);
     let left_aileron = lower.left_aileron + t * (upper.left_aileron - lower.left_aileron);
