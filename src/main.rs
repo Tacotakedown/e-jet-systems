@@ -47,5 +47,10 @@ async fn main() {
 
     println!("REST API server running on port 3030");
 
-    let _ = tokio::try_join!(brake_thread, electrical_thread, api_thread);
+    let _ = tokio::try_join!(
+        brake_thread,
+        electrical_thread,
+        api_thread,
+        simvar_update_thread
+    );
 }
