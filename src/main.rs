@@ -6,6 +6,7 @@ use tokio::time::sleep;
 
 use crate::nav_server::api_factory;
 use crate::simconnect::simvars::{SimVarBuilder, Simvars, Units};
+use crate::simconnect::Simconnect;
 use crate::systems::{brake_system, electrical};
 
 mod nav_server;
@@ -42,7 +43,7 @@ struct BusVoltages {
 }
 
 #[derive(Debug)]
-struct ElecticState {
+struct ElectricState {
     // we will store state of all electronics power here, bool
 }
 
@@ -51,6 +52,12 @@ pub struct MutexVariables {
     bus_voltage: Arc<Mutex<BusVoltages>>,
 }
 impl MutexVariables {
+    pub fn new(bus_voltage: BusVoltages) -> Self {
+        Self {
+            bus_voltage: Arc::new(Mutex::new(bus_voltage)),
+        }
+    }
+
     pub fn get_values(self) -> Vec<(String, f64)> {
         let ret_vec = Vec::new();
 
@@ -60,13 +67,38 @@ impl MutexVariables {
 
 #[tokio::main]
 async fn main() {
-    let simvars =
-        SimVarBuilder::simvar_builder().with_simvar(Simvars::AcBus1Voltage, Units::Number);
+    let simconnect = Simconnect::new("OBJ_SIMCONNECT".to_string());
+
+    let simvars = SimVarBuilder::simvar_builder()
+        .with_simvar(Simvars::AcBus1Voltage, Units::Number)
+        .with_simvar(Simvars::AcBus2Voltage, Units::Number)
+        .build();
+
+    let writer = simvars.deserialize_simvars();
+
+    let mutex_vars = MutexVariables::new(BusVoltages {
+        ac_bus1: 0.0,
+        ac_bus2: 0.0,
+        ac_ess_bus: 0.0,
+        ac_gnd_svc_bus: 0.0,
+        ac_stby_bus: 0.0,
+        dc_gnd_svc_bus: 0.0,
+        dc_bus1: 0.0,
+        dc_bus2: 0.0,
+        dc_ess_bus1: 0.0,
+        dc_ess_bus2: 0.0,
+        dc_ess_bus3: 0.0,
+        hot_bat_bus1: 0.0,
+        hot_bat_bus2: 0.0,
+        apu_start_bus: 0.0,
+    });
 
     let brake_thread = task::spawn(brake_system());
     let electrical_thread = task::spawn(electrical());
 
     let api_thread = task::spawn(api_factory());
+
+    let simvar_update_thread = task::spawn(simconnect.update(writer, mutex_vars));
 
     println!("REST API server running on port 3030");
 

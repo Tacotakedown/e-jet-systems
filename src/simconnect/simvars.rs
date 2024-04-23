@@ -86,8 +86,9 @@ impl SimVarBuilder {
         }
     }
 
-    pub fn with_simvar(&mut self, var: Simvars, unit: Units) {
+    pub fn with_simvar(&mut self, var: Simvars, unit: Units) -> Self {
         self.simvars.push((var, unit));
+        *self
     }
 
     pub fn build(self) -> Self {
