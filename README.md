@@ -1,17 +1,19 @@
 # Systems
 Systems for the E-170/175
 
-### what is a system?
-Any task or aspect of the aircraft that requires constant or regular manipulation of simvars.
+![logo](https://ouroborosjets.com/images/logo.png)
 
-### why do these not run in WASM
-I wanted to make use of a multi-threaded async runtime for a more fluid (get it) simulation
+### What is a system?
+A system refers to any task or aspect of the aircraft that requires constant or regular manipulation of simvars. These tasks are computationally intensive and should not run in JavaScript.
+
+### Why don't these run in WASM?
+The decision to not use WebAssembly (WASM) was made to leverage a multi-threaded async runtime for a more fluid simulation experience.
 
 ### How do they launch?
-The [Infinity Launcher](https://github.com/infinity-MSFS) launches the systems in the background upon recieving the event that you are loading the plane
+The [Infinity Launcher](https://github.com/infinity-MSFS) initiates the systems in the background upon receiving the event that you are loading the plane.
 
-### How the systems work for the ejet:
-1. Systems logic and system tasks (reading and writing) are handled by two seperate sides of the codebase. This means any system will happly run with or without simvar presence (the systems shouldnt know they are a part of msfs at all)
-2. Spawn a tokio task for each system logic. Interthread communicaiton of data will be based on Arc Mutex variables rather than passing the simvar context into the logic of the systems, like i said, no sim presence in logic threads
-3. results are parsed from each system thread each tick, then we will just call the simvarwriter to write the group of simvars to the sim
-4. profit $$$
+### How the systems work for the E-Jet:
+1. **Systems Logic and Tasks:** Handling of systems logic and tasks (reading and writing) are divided into two separate sides of the codebase. This design ensures that any system can run independently with or without simvar presence, as the systems remain agnostic to their MSFS environment.
+2. **Tokio Tasks:** Each system is spawned as a Tokio task. Interthread communication of data is based on Arc Mutex variables instead of passing the simvar context into the logic of the systems. This approach ensures that there is no direct sim presence in logic threads.
+3. **Result Parsing:** Results from each system thread are parsed each tick. Subsequently, the Simvar Writer is called to write the group of simvars to the simulator.
+4. **Profit:** Achieve desired functionality and enhance the simulation experience.
