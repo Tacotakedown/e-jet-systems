@@ -1,17 +1,14 @@
 use tokio::task;
 
 use crate::mutex::{BusVoltages, ElectricState, MutexVariables, SimulatorVariables};
-use crate::nav_server::api_factory;
-use crate::simconnect::simvars::{SimVarBuilder, Simvars, Units};
+use crate::server::api_factory;
 use crate::simconnect::Simconnect;
 use crate::systems::{brake_system, electrical};
 
 mod mutex;
-mod nav_server;
+mod server;
 mod simconnect;
 mod systems;
-mod terrain_radar;
-mod weather_radar;
 
 #[tokio::main]
 async fn main() {

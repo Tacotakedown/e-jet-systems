@@ -1,7 +1,10 @@
 use warp::Filter;
 
-pub mod lnav;
-pub mod vnav;
+mod endpoint_functions;
+mod lnav;
+mod terrain_radar;
+mod vnav;
+mod weather_radar;
 
 pub async fn api_factory() {
     let test = warp::path!("test" / String).map(|args: String| format!("Your arguments: {}", args));
