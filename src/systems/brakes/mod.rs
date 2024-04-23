@@ -11,7 +11,7 @@ pub mod friction;
 pub mod pressure_plate;
 pub mod stator;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BrakeSystem {
     assemblies: Vec<BrakeAssembly>,
 }
@@ -69,5 +69,9 @@ impl BrakeSystem {
 
     pub fn build(self) -> Self {
         self
+    }
+
+    pub fn calculate(self) {
+        // TODO: brake calculations, may need to expose some more functions for each component of system
     }
 }

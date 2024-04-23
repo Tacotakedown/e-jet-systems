@@ -15,7 +15,7 @@ pub mod inverter;
 pub mod resistor;
 pub mod transformer;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ElectricalSystem {
     busses: Vec<Bus>,
     batteries: Vec<Battery>,
@@ -30,14 +30,8 @@ impl ElectricalSystem {
             generators: Vec::new(),
         }
     }
-    pub fn with_bus(
-        mut self,
-        name: Busses,
-        current_type: CurrentType,
-        voltage: f64,
-        var: String,
-    ) -> Self {
-        let bus = Bus::new(name.to_string(), var, current_type, voltage);
+    pub fn with_bus(mut self, name: Busses, current_type: CurrentType, voltage: f64) -> Self {
+        let bus = Bus::new(name.to_string(), current_type, voltage);
         self.busses.push(bus);
         self
     }
@@ -117,7 +111,7 @@ impl ElectricalSystem {
         self
     }
 
-    pub fn get_system_results(&self) {
-        // need to create a type and return required voltages:f64 and electronics state:boolean for every component in the system on call
+    pub fn calculate(&self) {
+        // TODO: create a type and return required voltages:f64 and electronics state:boolean for every component in the system on call
     }
 }

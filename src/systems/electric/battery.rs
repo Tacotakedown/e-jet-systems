@@ -1,6 +1,6 @@
 use super::busses::Busses;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Battery {
     name: String,
     voltage: f64,

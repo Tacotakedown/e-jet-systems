@@ -1,6 +1,6 @@
 use super::busses::Busses;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Generator {
     name: String,
     voltage: f64,    // Volts

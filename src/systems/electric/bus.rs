@@ -1,20 +1,18 @@
 use super::{components::Component, current_type::CurrentType};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Bus {
     name: String,
     pub components: Vec<Component>,
-    var: String,
     current_type: CurrentType,
     voltage: f64,
 }
 
 impl Bus {
-    pub fn new(name: String, var: String, current_type: CurrentType, voltage: f64) -> Self {
+    pub fn new(name: String, current_type: CurrentType, voltage: f64) -> Self {
         Self {
             name,
             components: Vec::new(),
-            var,
             current_type,
             voltage,
         }

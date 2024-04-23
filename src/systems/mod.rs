@@ -1,9 +1,12 @@
+use std::time::Duration;
+
 use self::{
     brakes::brake_location::BrakePosition,
     brakes::brake_materials::BrakeMaterials,
     brakes::BrakeSystem,
     electric::{busses::Busses, current_type::CurrentType, ElectricalSystem},
 };
+use tokio::time::sleep;
 
 pub mod air_conditioning;
 pub mod brakes;
@@ -15,14 +18,11 @@ pub mod pneumatic;
 pub mod reverse_thrust;
 pub mod shared;
 
+const TICK_SLEEP_DURATION: Duration = Duration::from_millis(16);
+
 pub async fn electrical() -> ElectricalSystem {
     let electrical_system = ElectricalSystem::new()
-        .with_bus(
-            Busses::AcBus1,
-            CurrentType::AC,
-            120.0,
-            "L:OBJ_E170_AC_BUS_1_V".to_string(),
-        )
+        .with_bus(Busses::AcBus1, CurrentType::AC, 120.0)
         .with_component(
             "Component 1".to_string(),
             "L:COMPONENT_1_VOLTAGE".to_string(),
@@ -58,7 +58,10 @@ pub async fn electrical() -> ElectricalSystem {
 
     loop {
         // TODO: call the implemented electrical_system.calculate() here and feed it the proper mutex vars
+        electrical_system.calculate();
         println!("electrical system: {:?}", electrical_system);
+
+        sleep(TICK_SLEEP_DURATION).await;
     }
 }
 
@@ -84,6 +87,9 @@ pub async fn brake_system() -> BrakeSystem {
 
     loop {
         // TODO: call the implemented brake_system.calculate() here and feed it the proper mutex vars
+        brake_system.clone().calculate();
         println!("brake: {:?}", brake_system);
+
+        sleep(TICK_SLEEP_DURATION).await;
     }
 }

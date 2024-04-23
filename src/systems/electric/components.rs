@@ -1,6 +1,6 @@
 use super::current_type::{self, CurrentType};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Component {
     pub name: String,
     var: String,
