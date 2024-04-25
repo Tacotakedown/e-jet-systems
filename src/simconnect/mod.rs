@@ -26,7 +26,7 @@ impl Simconnect {
             Self::write_simconnect(parsed);
 
             //TODO: read from a list of simvars that are expected to change within the sim, these should all be user input vars like switches because all data is shared inside the simulation already
-            tokio::time::sleep(tokio::time::Duration::from_millis(13));
+            tokio::time::sleep(tokio::time::Duration::from_millis(13)).await;
         }
     }
 }

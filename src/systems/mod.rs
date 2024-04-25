@@ -1,10 +1,9 @@
 use std::time::Duration;
 
 use self::{
-    brakes::brake_location::BrakePosition,
-    brakes::brake_materials::BrakeMaterials,
-    brakes::BrakeSystem,
+    brakes::{brake_location::BrakePosition, brake_materials::BrakeMaterials, BrakeSystem},
     electric::{busses::Busses, current_type::CurrentType, ElectricalSystem},
+    hydraulic::{FlowDirection, HydraulicSystem},
 };
 use tokio::time::sleep;
 
@@ -59,7 +58,7 @@ pub async fn electrical() -> ElectricalSystem {
     loop {
         // TODO: call the implemented electrical_system.calculate() here and feed it the proper mutex vars
         electrical_system.calculate();
-        println!("electrical system: {:?}", electrical_system);
+        // println!("electrical system: {:?}", electrical_system);
 
         sleep(TICK_SLEEP_DURATION).await;
     }
@@ -88,8 +87,23 @@ pub async fn brake_system() -> BrakeSystem {
     loop {
         // TODO: call the implemented brake_system.calculate() here and feed it the proper mutex vars
         brake_system.clone().calculate();
-        println!("brake: {:?}", brake_system);
+        // println!("brake: {:?}", brake_system);
 
+        sleep(TICK_SLEEP_DURATION).await;
+    }
+}
+
+pub async fn hydraulic_system() {
+    let mut hydraulic = HydraulicSystem::new();
+
+    hydraulic.add_component(1, hydraulic::ComponentType::Pump);
+    hydraulic.add_component(2, hydraulic::ComponentType::Valve);
+    hydraulic.add_component(3, hydraulic::ComponentType::Actuator);
+    hydraulic.add_connection(1, 2, FlowDirection::InletToOutlet);
+    hydraulic.add_connection(2, 3, FlowDirection::InletToOutlet);
+
+    loop {
+        hydraulic.simulate_system_async().await;
         sleep(TICK_SLEEP_DURATION).await;
     }
 }

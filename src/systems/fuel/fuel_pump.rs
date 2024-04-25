@@ -1,7 +1,8 @@
 #[derive(Debug)]
 pub enum FuelPumpType {
-    Engine,
-    Electric,
+    AcAuxBoostPump,
+    DcApuEngineStartPump,
+    EjectorPump,
 }
 
 #[derive(Debug)]

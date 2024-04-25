@@ -5,6 +5,7 @@ use self::spoilers::spoiler_position::SpoilerPosition;
 
 pub mod ailerons;
 pub mod elevator;
+pub mod nosewheel_steering;
 pub mod rudder;
 pub mod shared;
 pub mod spoilers;

@@ -3,7 +3,7 @@ use tokio::task;
 use crate::mutex::{BusVoltages, ElectricState, MutexVariables, SimulatorVariables};
 use crate::server::api_factory;
 use crate::simconnect::Simconnect;
-use crate::systems::{brake_system, electrical};
+use crate::systems::{brake_system, electrical, hydraulic_system};
 
 mod mutex;
 mod server;
@@ -40,6 +40,7 @@ async fn main() {
 
     let brake_thread = task::spawn(brake_system());
     let electrical_thread = task::spawn(electrical());
+    let hydraulic_thread = task::spawn(hydraulic_system());
 
     let api_thread = task::spawn(api_factory());
 
@@ -50,6 +51,7 @@ async fn main() {
     let _ = tokio::try_join!(
         brake_thread,
         electrical_thread,
+        hydraulic_thread,
         api_thread,
         simvar_update_thread
     );
