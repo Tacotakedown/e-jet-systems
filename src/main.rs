@@ -44,7 +44,7 @@ async fn main() {
 
     let api_thread = task::spawn(api_factory());
 
-    let simvar_update_thread = task::spawn(simconnect.update(mutex_vars));
+    // let simvar_update_thread = task::spawn(simconnect.update(mutex_vars));
 
     println!("REST API server running on port 3030");
 
@@ -53,6 +53,6 @@ async fn main() {
         electrical_thread,
         hydraulic_thread,
         api_thread,
-        simvar_update_thread
+        // simvar_update_thread
     );
 }

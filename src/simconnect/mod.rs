@@ -19,10 +19,10 @@ impl Simconnect {
             // Simconnect.write(var, unit, value);
         }
     }
-    pub async fn update(self, values: MutexVariables) {
+    pub async fn update(&self, values: MutexVariables) {
         loop {
             let parsed: Vec<(String, f64, String)> = mutex::get_values(values.clone()).await;
-
+            // writes all the mutex vars to simconnect every tick
             Self::write_simconnect(parsed);
 
             //TODO: read from a list of simvars that are expected to change within the sim, these should all be user input vars like switches because all data is shared inside the simulation already

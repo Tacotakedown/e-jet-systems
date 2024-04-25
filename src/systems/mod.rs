@@ -3,7 +3,11 @@ use std::time::Duration;
 use self::{
     brakes::{brake_location::BrakePosition, brake_materials::BrakeMaterials, BrakeSystem},
     electric::{busses::Busses, current_type::CurrentType, ElectricalSystem},
-    hydraulic::{FlowDirection, HydraulicSystem},
+    hydraulic::{
+        components::{E170HydraulicComponents, E170System1, E170System2, E170System3},
+        hydraulic_line::HydraulicLineMaterial,
+        ComponentType, FlowDirection, HydraulicSystem,
+    },
 };
 use tokio::time::sleep;
 
@@ -96,11 +100,239 @@ pub async fn brake_system() -> BrakeSystem {
 pub async fn hydraulic_system() {
     let mut hydraulic = HydraulicSystem::new();
 
-    hydraulic.add_component(1, hydraulic::ComponentType::Pump);
-    hydraulic.add_component(2, hydraulic::ComponentType::Valve);
-    hydraulic.add_component(3, hydraulic::ComponentType::Actuator);
-    hydraulic.add_connection(1, 2, FlowDirection::InletToOutlet);
-    hydraulic.add_connection(2, 3, FlowDirection::InletToOutlet);
+    // building system 1 components
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::Reservoir).id(),
+        ComponentType::Reservoir,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::AcMotorPump).id(),
+        ComponentType::ElecPump,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::EngineDrivenPump).id(),
+        ComponentType::Pump,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::FilterManifold).id(),
+        ComponentType::FilterManifold,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::ReturnPriorityValve).id(),
+        ComponentType::PriorityValve,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::SystemAccumulator).id(),
+        ComponentType::Accumulator,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::LhThrustReverser).id(),
+        ComponentType::Actuator,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::LhRhGS2).id(),
+        ComponentType::Actuator,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::LhRhMFS3).id(),
+        ComponentType::Actuator,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::LhRhMFS4).id(),
+        ComponentType::Actuator,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::LhOutboardElevator).id(),
+        ComponentType::Actuator,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::OutboardBrakeSystem).id(),
+        ComponentType::Actuator,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::UpperRudder).id(),
+        ComponentType::Actuator,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::ParkingBrakeAccumulator).id(),
+        ComponentType::Accumulator,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::ParkingBrake).id(),
+        ComponentType::Actuator,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::PTUValve).id(),
+        ComponentType::PTUSelecorValve,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System1(E170System1::PTU).id(),
+        ComponentType::PTU,
+    );
+
+    // connecting system 1 components in proper order
+    //TODO: Find reasonable lengths for hydraulic connections
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::Reservoir).id(),
+        E170HydraulicComponents::System1(E170System1::EngineDrivenPump).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::Reservoir).id(),
+        E170HydraulicComponents::System1(E170System1::AcMotorPump).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::EngineDrivenPump).id(),
+        E170HydraulicComponents::System1(E170System1::FilterManifold).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::AcMotorPump).id(),
+        E170HydraulicComponents::System1(E170System1::FilterManifold).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::FilterManifold).id(),
+        E170HydraulicComponents::System1(E170System1::ReturnPriorityValve).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::ReturnPriorityValve).id(),
+        E170HydraulicComponents::System1(E170System1::SystemAccumulator).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::SystemAccumulator).id(),
+        E170HydraulicComponents::System1(E170System1::Reservoir).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::FilterManifold).id(),
+        E170HydraulicComponents::System1(E170System1::LhThrustReverser).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::FilterManifold).id(),
+        E170HydraulicComponents::System1(E170System1::LhRhGS2).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::FilterManifold).id(),
+        E170HydraulicComponents::System1(E170System1::LhRhMFS3).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::FilterManifold).id(),
+        E170HydraulicComponents::System1(E170System1::LhRhMFS4).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::FilterManifold).id(),
+        E170HydraulicComponents::System1(E170System1::LhOutboardElevator).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::FilterManifold).id(),
+        E170HydraulicComponents::System1(E170System1::OutboardBrakeSystem).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::FilterManifold).id(),
+        E170HydraulicComponents::System1(E170System1::UpperRudder).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::FilterManifold).id(),
+        E170HydraulicComponents::System1(E170System1::ParkingBrakeAccumulator).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::FilterManifold).id(),
+        E170HydraulicComponents::System1(E170System1::PTUValve).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::PTUValve).id(),
+        E170HydraulicComponents::System1(E170System1::PTUPriorityValve).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+    hydraulic.add_connection(
+        E170HydraulicComponents::System1(E170System1::PTUPriorityValve).id(),
+        E170HydraulicComponents::System1(E170System1::PTU).id(),
+        FlowDirection::InletToOutlet,
+        1.0,
+        HydraulicLineMaterial::Solid,
+    );
+
+    // building system 2 components
+    hydraulic.add_component(
+        E170HydraulicComponents::System2(E170System2::Reservoir).id(),
+        ComponentType::Reservoir,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System2(E170System2::EngineDrivenPump).id(),
+        ComponentType::Pump,
+    );
+    hydraulic.add_component(
+        E170HydraulicComponents::System2(E170System2::AcMotorPump).id(),
+        ComponentType::ElecPump,
+    );
+
+    //connecting system 2 components in proper order
+
+    // building system 3 components
+
+    //connecting system 3 components in proper order
+
+    // system 1 and 2 connections (PTU)
 
     loop {
         hydraulic.simulate_system_async().await;
