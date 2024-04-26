@@ -1,5 +1,5 @@
 # Systems
-Systems for the E-170/175
+Systems for the E-170/175 [![wakatime](https://wakatime.com/badge/user/decbbf65-6f71-496b-9844-3a4fa13618f5/project/018ebcea-f73e-466f-b959-0bfe659c2eb3.svg)](https://wakatime.com/badge/user/decbbf65-6f71-496b-9844-3a4fa13618f5/project/018ebcea-f73e-466f-b959-0bfe659c2eb3)
 
 ![logo](https://ouroborosjets.com/images/logo.png)
 

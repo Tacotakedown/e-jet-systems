@@ -3,29 +3,34 @@ pub mod fluid;
 pub mod hydraulic_line;
 pub mod math;
 pub mod pump;
+pub mod reservoir;
 
 use std::collections::HashMap;
+
 use tokio::time::Instant;
 
 use self::hydraulic_line::HydraulicLineMaterial;
+use self::pump::engine_driven_pump::EngineDrivenHydraulicPump;
+use self::reservoir::Reservoir;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ComponentType {
     Reservoir,
     Pump,
     ElecPump,
     FilterManifold,
     Accumulator,
-    Valve,
+    UnloaderValve,
+    FlowLimitValve,
+    GearManifold,
     Actuator,
     PTU,
     PTUSelecorValve,
     PriorityValve,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Component {
-    id: String,
     component_type: ComponentType,
 }
 
@@ -58,12 +63,14 @@ impl HydraulicSystem {
             connections: Vec::new(),
         }
     }
+    fn get_component_by_id(&self, id: String) -> Component {
+        let component = self.components.clone();
+        let component = component.get(&id).unwrap();
+        component.clone()
+    }
 
     pub fn add_component(&mut self, id: String, component_type: ComponentType) {
-        let component = Component {
-            id: id.clone(),
-            component_type,
-        };
+        let component = Component { component_type };
         self.components.insert(id, component);
     }
 
@@ -86,16 +93,47 @@ impl HydraulicSystem {
     }
 
     fn simulate(&self) {
-        static mut ENGINE_RPM: f64 = 0.0;
-        static mut FLUID_MOVED: f64 = 0.0;
         static mut LAST_TIME: Option<Instant> = None;
 
         // TODO: instead of looping through all the possible connections, we will hard code all the connections so we can configure the proper logic
+        // after a second look it seems like having the abstractions above the constructors is not as useful using this mehtod, im keeping them for the purpose of having a more modular system in the future but right now its far to specific to map the hashmap to its proper constructors
 
         // some variables can just be static so we dont have to pass 50 mutex vars into each system, the only variables that need to be mutex are ones that pass between threads obviously
 
         //  SYSTEM 1
-        fn system_1() {}
+        fn system_1() {
+            static mut RESERVOIR_LEVEL: f64 = 12.3; // TODO: mutex var
+            static mut ENGINE_RPM: f64 = 4825.;
+
+            let mut reservoir = Reservoir::new();
+            reservoir.set_fluid_level(unsafe { RESERVOIR_LEVEL });
+
+            let mut engine_driven_pump = EngineDrivenHydraulicPump::new();
+            engine_driven_pump.set_engine_rpm(unsafe { ENGINE_RPM });
+            engine_driven_pump.enable_compensator();
+            let current_time = Instant::now();
+            let dt = if let Some(last_time) = unsafe { &LAST_TIME } {
+                current_time.duration_since(*last_time).as_secs_f64()
+            } else {
+                0.0
+            };
+
+            let mut flow_this_tick = engine_driven_pump.calculate_volume_flow(dt);
+
+            if unsafe { RESERVOIR_LEVEL - flow_this_tick } <= 0. {
+                flow_this_tick = unsafe { RESERVOIR_LEVEL }
+            }
+
+            unsafe { RESERVOIR_LEVEL -= flow_this_tick }
+            println!(
+                "\rlevel:{:.4} flow: {:.4}",
+                unsafe { RESERVOIR_LEVEL },
+                flow_this_tick
+            );
+
+            unsafe { LAST_TIME = Some(current_time) };
+            //
+        }
 
         system_1();
 
