@@ -18,7 +18,7 @@ impl AcMotorPump {
         if self.powered {
             self.rated_output_flow_l_min
         } else {
-            0.
+            0.0
         }
     }
 }
