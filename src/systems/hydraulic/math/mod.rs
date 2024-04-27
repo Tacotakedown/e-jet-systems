@@ -24,6 +24,31 @@ pub trait HydraulicMath {
     fn density(mass: f64, volume: f64) -> f64;
 
     fn dynamic_viscocity(shear_stress: f64, shear_rate: f64) -> f64;
+
+    fn darcy_law(
+        flow_rate_l_min: f64,
+        permability: f64,
+        cross_sectional_area: f64,
+        dynamic_viscocity: f64,
+        length_of_filter: f64,
+    ) -> f64;
+
+    fn pressure_from_temperature(density: f64, temperature: f64, molar_mass: f64) -> f64;
+
+    fn pressrue_pa_estimated(
+        density: f64,
+        volume: f64,
+        cross_sectional_areas: Vec<f64>,
+        flow_rate: f64,
+    ) -> f64;
+
+    fn pressure_pa_increase(
+        pressure_pa: f64,
+        density: f64,
+        volume: f64,
+        cross_sectional_areas: Vec<f64>,
+        flow_rate: f64,
+    ) -> f64;
 }
 
 pub struct HydraulicCalculator {}
@@ -67,5 +92,46 @@ impl HydraulicMath for HydraulicCalculator {
 
     fn dynamic_viscocity(shear_stress: f64, shear_rate: f64) -> f64 {
         shear_stress / shear_rate
+    }
+    fn darcy_law(
+        flow_rate_l_min: f64,
+        permability: f64,
+        cross_sectional_area: f64,
+        dynamic_viscocity: f64,
+        length_of_filter: f64,
+    ) -> f64 {
+        let flow_rate_l_sec = flow_rate_l_min / 60.;
+        (flow_rate_l_sec * dynamic_viscocity * length_of_filter)
+            / (permability * cross_sectional_area)
+    }
+    fn pressure_from_temperature(density: f64, temperature: f64, molar_mass: f64) -> f64 {
+        (density * 8.314 * temperature) / molar_mass
+    }
+
+    fn pressrue_pa_estimated(
+        density: f64,
+        volume: f64,
+        cross_sectional_areas: Vec<f64>,
+        flow_rate: f64,
+    ) -> f64 {
+        let mut net_cross_sectional_area: f64 = 0.;
+        for val in cross_sectional_areas {
+            net_cross_sectional_area += val
+        }
+        0.5 * density * (flow_rate / net_cross_sectional_area).powf(2.)
+    }
+
+    fn pressure_pa_increase(
+        pressure_pa: f64,
+        density: f64,
+        volume: f64,
+        cross_sectional_areas: Vec<f64>,
+        flow_rate: f64,
+    ) -> f64 {
+        let mut net_cross_sectional_area: f64 = 0.;
+        for val in cross_sectional_areas {
+            net_cross_sectional_area += val
+        }
+        pressure_pa + 0.5 * density * (flow_rate / net_cross_sectional_area).powf(2.)
     }
 }

@@ -65,3 +65,17 @@ $$Q=C_V*\sqrt{\Delta P}$$
     Q: Flow rate (m³/s)
     Cᵥ​: Flow coefficient (m³/s per psi or per Pa)
     ΔP: Pressure drop across the valve (Pa)
+
+
+
+## filters:
+
+### Darcy's Law
+$$ΔP=\frac{Q*μ*L}{k*A}$$
+
+    Q is the flow rate (volume per time).
+    k is the permeability of the filter medium.
+    A is the cross-sectional area of the filter.
+    ΔP is the pressure drop across the filter.
+    μ is the dynamic viscosity of the liquid.
+    L is the length of the filter.
