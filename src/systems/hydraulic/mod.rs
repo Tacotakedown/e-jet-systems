@@ -8,6 +8,8 @@ pub mod reservoir;
 
 use core::ptr::addr_of;
 use once_cell::sync::Lazy;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 use std::collections::HashMap;
 use std::process::Command;
@@ -104,17 +106,19 @@ impl HydraulicSystem {
         self.connections.push(connection);
     }
 
-    fn simulate(&self) {
+    async fn simulate(&self, system_1_pressure: Arc<Mutex<f64>>) {
         static mut LAST_TIME: Lazy<Instant> = Lazy::new(|| Instant::now());
-        static mut SYSTEM_1_PRESSURE: f64 = 0.;
 
         let hydraulic_fluid = HydraulicFluid::new();
 
         //  SYSTEM 1
-        fn system_1(fluid: HydraulicFluid) {
+        async fn system_1(fluid: HydraulicFluid, sys_1_pressure: Arc<Mutex<f64>>) {
             static mut RESERVOIR_LEVEL: f64 = 12.3; // TODO: mutex var
             static mut ENGINE_RPM: f64 = 4825.;
             static mut SYS1_AC_PUMP_CONTROLLER: bool = false;
+
+            let mut pressure_lock = sys_1_pressure.lock().await;
+
             const FLUID_TEMP: f64 = 35.;
 
             let viscosity = fluid.get_viscosity(FLUID_TEMP);
@@ -137,13 +141,16 @@ impl HydraulicSystem {
 
             let ac_pump_flow = elec_pump.get_output(dt);
 
-            if unsafe { pa_to_psi(SYSTEM_1_PRESSURE) >= 3000. } {
+            let mut pressure = pressure_lock.clone();
+            pressure = pa_to_psi(pressure);
+
+            if pressure >= 3000. {
                 engine_driven_pump.disable_compensator();
             } else {
                 engine_driven_pump.enable_compensator()
             }
 
-            if unsafe { pa_to_psi(SYSTEM_1_PRESSURE) >= 2700. } {
+            if pressure >= 2700. {
                 unsafe { SYS1_AC_PUMP_CONTROLLER = false }
             } else {
                 unsafe { SYS1_AC_PUMP_CONTROLLER = true }
@@ -162,12 +169,14 @@ impl HydraulicSystem {
             let pressure_increase = 0.5 * fluid.density_kg_m_3_60f * velocity.powf(2.)
                 + engine_driven_pump.get_leakback();
 
+            *pressure_lock += pressure_increase;
+
             fn pa_to_psi(pressure_pa: f64) -> f64 {
                 const PSI_TO_PA: f64 = 6894.76;
                 pressure_pa / PSI_TO_PA
             }
-            clear();
-            println!("pressure: {:.4}", pa_to_psi(unsafe { SYSTEM_1_PRESSURE }));
+            // clear();
+            println!("pressure: {:.4}", pa_to_psi(*pressure_lock));
 
             println!(
                 "\rlevel:{:.4} flow: {:.4}",
@@ -176,14 +185,14 @@ impl HydraulicSystem {
             );
 
             unsafe { *LAST_TIME = current_time };
-            unsafe { SYSTEM_1_PRESSURE += pressure_increase }
-            //
+
+            drop(pressure_lock);
         }
 
-        system_1(hydraulic_fluid);
+        system_1(hydraulic_fluid, system_1_pressure).await;
     }
 
-    pub async fn simulate_system_async(&mut self) {
-        self.simulate()
+    pub async fn simulate_system_async(&mut self, system_1_pressure: Arc<Mutex<f64>>) {
+        self.simulate(system_1_pressure).await
     }
 }

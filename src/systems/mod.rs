@@ -1,4 +1,6 @@
+use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::Mutex;
 
 use self::{
     brakes::{brake_location::BrakePosition, brake_materials::BrakeMaterials, BrakeSystem},
@@ -454,8 +456,12 @@ pub async fn hydraulic_system() {
 
     // system 1 and 2 connections (PTU)
 
+    let sys_1_pressure = Arc::new(Mutex::new(0.0));
+
     loop {
-        hydraulic.simulate_system_async().await;
+        hydraulic
+            .simulate_system_async(sys_1_pressure.clone())
+            .await;
         sleep(TICK_SLEEP_DURATION).await;
     }
 }
