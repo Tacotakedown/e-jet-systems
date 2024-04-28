@@ -6,14 +6,16 @@ pub mod math;
 pub mod pump;
 pub mod reservoir;
 
-use std::collections::HashMap;
+use core::ptr::addr_of;
+use once_cell::sync::Lazy;
 
+use std::collections::HashMap;
 use std::process::Command;
 use tokio::time::Instant;
 
 use self::fluid::HydraulicFluid;
 use self::hydraulic_line::HydraulicLineMaterial;
-use self::pump::engine_driven_pump::EngineDrivenHydraulicPump;
+use self::pump::{ac_motor_pump::AcMotorPump, engine_driven_pump::EngineDrivenHydraulicPump};
 use self::reservoir::Reservoir;
 
 fn clear() {
@@ -103,12 +105,8 @@ impl HydraulicSystem {
     }
 
     fn simulate(&self) {
-        static mut LAST_TIME: Option<Instant> = None;
+        static mut LAST_TIME: Lazy<Instant> = Lazy::new(|| Instant::now());
         static mut SYSTEM_1_PRESSURE: f64 = 0.;
-        // TODO: instead of looping through all the possible connections, we will hard code all the connections so we can configure the proper logic
-        // after a second look it seems like having the abstractions above the constructors is not as useful using this mehtod, im keeping them for the purpose of having a more modular system in the future but right now its far to specific to map the hashmap to its proper constructors
-
-        // some variables can just be static so we dont have to pass 50 mutex vars into each system, the only variables that need to be mutex are ones that pass between threads obviously
 
         let hydraulic_fluid = HydraulicFluid::new();
 
@@ -116,7 +114,7 @@ impl HydraulicSystem {
         fn system_1(fluid: HydraulicFluid) {
             static mut RESERVOIR_LEVEL: f64 = 12.3; // TODO: mutex var
             static mut ENGINE_RPM: f64 = 4825.;
-
+            static mut SYS1_AC_PUMP_CONTROLLER: bool = false;
             const FLUID_TEMP: f64 = 35.;
 
             let viscosity = fluid.get_viscosity(FLUID_TEMP);
@@ -128,18 +126,27 @@ impl HydraulicSystem {
             engine_driven_pump.set_engine_rpm(unsafe { ENGINE_RPM });
             engine_driven_pump.enable_compensator();
 
-            let mut elec_pump = "";
-            let current_time = Instant::now();
-            let dt = if let Some(last_time) = unsafe { &LAST_TIME } {
-                current_time.duration_since(*last_time).as_secs_f64()
-            } else {
-                0.0
-            };
+            let mut elec_pump = AcMotorPump::new();
+            elec_pump.set_power_state(unsafe { SYS1_AC_PUMP_CONTROLLER });
+
+            let current_time: Instant = Instant::now();
+            let last_time = unsafe { addr_of!(LAST_TIME) };
+            let dt = current_time
+                .duration_since(unsafe { **last_time })
+                .as_secs_f64();
+
+            let ac_pump_flow = elec_pump.get_output(dt);
 
             if unsafe { pa_to_psi(SYSTEM_1_PRESSURE) >= 3000. } {
                 engine_driven_pump.disable_compensator();
             } else {
                 engine_driven_pump.enable_compensator()
+            }
+
+            if unsafe { pa_to_psi(SYSTEM_1_PRESSURE) >= 2700. } {
+                unsafe { SYS1_AC_PUMP_CONTROLLER = false }
+            } else {
+                unsafe { SYS1_AC_PUMP_CONTROLLER = true }
             }
 
             let mut flow_this_tick = engine_driven_pump.calculate_volume_flow(dt);
@@ -148,10 +155,10 @@ impl HydraulicSystem {
                 flow_this_tick = unsafe { RESERVOIR_LEVEL }
             }
 
-            unsafe { RESERVOIR_LEVEL -= flow_this_tick }
+            unsafe { RESERVOIR_LEVEL -= flow_this_tick + ac_pump_flow }
+            const CROSS_SECTIONAL_AREA: f64 = 0.009;
 
-            let cross_sectional_area = 0.00004;
-            let velocity = flow_this_tick / cross_sectional_area;
+            let velocity = (flow_this_tick + ac_pump_flow) / (CROSS_SECTIONAL_AREA / 100.);
             let pressure_increase = 0.5 * fluid.density_kg_m_3_60f * velocity.powf(2.)
                 + engine_driven_pump.get_leakback();
 
@@ -165,56 +172,15 @@ impl HydraulicSystem {
             println!(
                 "\rlevel:{:.4} flow: {:.4}",
                 unsafe { RESERVOIR_LEVEL },
-                flow_this_tick
+                flow_this_tick + ac_pump_flow
             );
 
-            unsafe { LAST_TIME = Some(current_time) };
+            unsafe { *LAST_TIME = current_time };
             unsafe { SYSTEM_1_PRESSURE += pressure_increase }
             //
         }
 
         system_1(hydraulic_fluid);
-
-        // for connection in &self.connections {
-        //     let source_component = self.components.get(&connection.source_id);
-        //     let target_component = self.components.get(&connection.target_id);
-
-        //     if let (Some(source), Some(target)) = (source_component, target_component) {
-        //         match &source.component_type {
-        //             ComponentType::Pump => {
-        //                 let mut pump = EngineDrivenHydraulicPump::new();
-        //                 let max_rpm = 4825.0;
-        //                 let rpm_step = max_rpm / 10.0; // Adjust the step size as needed
-        //                 let current_time = Instant::now();
-        //                 let dt = if let Some(last_time) = unsafe { &LAST_TIME } {
-        //                     current_time.duration_since(*last_time).as_secs_f64()
-        //                 } else {
-        //                     0.0
-        //                 };
-        //                 unsafe { LAST_TIME = Some(current_time) };
-        //                 for rpm in (0..=max_rpm as i32).step_by(rpm_step as usize) {
-        //                     unsafe { ENGINE_RPM = rpm as f64 };
-        //                     pump.set_engine_rpm(unsafe { ENGINE_RPM });
-        //                     pump.enable_compensator();
-        //                     let flow_this_tick = pump.calculate_volume_flow(dt);
-        //                     unsafe {
-        //                         FLUID_MOVED += flow_this_tick;
-        //                     }
-        //                     println!(
-        //                         "\r Pump RPM: {:.2}, Flow (L this tick): {}",
-        //                         unsafe { ENGINE_RPM },
-        //                         flow_this_tick
-        //                     );
-        //                 }
-        //             }
-        //             _ => {}
-        //         }
-        //         match &target.component_type {
-        //             ComponentType::Valve => {}
-        //             _ => {}
-        //         }
-        //     }
-        // }
     }
 
     pub async fn simulate_system_async(&mut self) {

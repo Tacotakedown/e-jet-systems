@@ -10,7 +10,7 @@ system. Pump operation is identical to that of the EDPs, except
 that there are no depressurization solenoids on the ACMPs.
 ACMP 1B supplies hydraulic power to the No. 1 hydraulic system.
 ACMP 2B supplies hydraulic power to system No. 2 hydraulic
-system. The rated output of the ACMP is 14.0 l/min (3.7 gal/min)
+system. The rated output of the ACMP is `14.0 l/min (3.7 gal/min)`
 at 18616 kPa (2700 psi) minimum. This rating applies with an inlet
 pressure of 344.74 kPa (50 psig), when the motor is supplied with
 three-phase 115/200 VAC, 400 Hz electrical power.

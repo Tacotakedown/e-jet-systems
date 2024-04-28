@@ -122,6 +122,7 @@ dependencies = [
 name = "e-jet-systems"
 version = "0.1.0"
 dependencies = [
+ "once_cell",
  "serde",
  "serde_json",
  "tokio",
