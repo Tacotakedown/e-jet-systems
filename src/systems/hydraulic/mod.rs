@@ -175,7 +175,7 @@ impl HydraulicSystem {
                 const PSI_TO_PA: f64 = 6894.76;
                 pressure_pa / PSI_TO_PA
             }
-            // clear();
+            clear();
             println!("pressure: {:.4}", pa_to_psi(*pressure_lock));
 
             println!(
