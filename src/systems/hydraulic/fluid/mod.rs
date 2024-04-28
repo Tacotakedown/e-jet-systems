@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Viscosity {
     pub c_st_minus_54c: f64,
     pub c_st_minus_40c: f64,
@@ -6,7 +6,7 @@ pub struct Viscosity {
     pub c_st_100c: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ParticulateContamination {
     pub size_5_15_microns: u32,
     pub size_16_25_microns: u32,
@@ -15,7 +15,7 @@ pub struct ParticulateContamination {
     pub size_100_plus_microns: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HydraulicFluid {
     pub iso_grade: u8,
     pub gravity_api: f64,

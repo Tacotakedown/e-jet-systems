@@ -12,9 +12,8 @@ impl Accumulator {
             current_capacity,
         }
     }
-    pub fn get current_capacity(&self) ->f64 {
-    	self.current_capacity
+    pub fn get_current_capacity(&self) -> f64 {
+        self.current_capacity
     }
     // the way the accumulator will work will be, if there is no pressure in the system from the pumps, the accumulators will displace the proper amount of fluid until system pressure = nitrogen pressure until its empty, then when the sytem is on, we will fill the accumulator (increasing the pressure of the nitrogen because its compressed)
-    
 }

@@ -43,7 +43,7 @@ impl EngineDrivenHydraulicPump {
         if !self.conpensator_enabled {
             return -0.0;
         }
-        const STEP_DOWN_GEAR: f64 = 1.0; // need some further information as i assume its not 1 to 1 gearing between engine and pump
+        const STEP_DOWN_GEAR: f64 = 1.0; //TODO: need some further information as i assume its not 1 to 1 gearing between engine and pump
         let rpm = self.engine_rpm;
         let rpm_delta = (rpm * STEP_DOWN_GEAR) / self.operating_rpm;
         let volume_flow_rate = self.rated_output_flow_l_min * rpm_delta;

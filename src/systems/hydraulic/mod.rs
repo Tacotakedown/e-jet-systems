@@ -1,3 +1,4 @@
+pub mod accumulator;
 pub mod components;
 pub mod filter_manifold;
 pub mod fluid;
@@ -8,13 +9,11 @@ pub mod reservoir;
 
 use core::ptr::addr_of;
 use once_cell::sync::Lazy;
-use std::sync::Arc;
-use tokio::sync::Mutex;
-
 use std::collections::HashMap;
 use std::process::Command;
 use tokio::time::Instant;
 
+use crate::mutex::HydraulicVars;
 use crate::mutex::MutexVariables;
 use crate::systems::hydraulic::filter_manifold::FilterManifold;
 use crate::systems::shared::reduce_by_percentage;
@@ -23,8 +22,6 @@ use self::fluid::HydraulicFluid;
 use self::hydraulic_line::HydraulicLineMaterial;
 use self::pump::{ac_motor_pump::AcMotorPump, engine_driven_pump::EngineDrivenHydraulicPump};
 use self::reservoir::Reservoir;
-
-use crate::mutex::{HydraulicVars, System1Vars};
 
 fn clear() {
     if cfg!(windows) {
@@ -113,12 +110,11 @@ impl HydraulicSystem {
     }
 
     pub async fn simulate(&self, mutex_vars: MutexVariables) {
-        static mut LAST_TIME: Lazy<Instant> = Lazy::new(|| Instant::now());
-
         let hydraulic_fluid = HydraulicFluid::new();
 
         //  SYSTEM 1
         async fn system_1(fluid: HydraulicFluid, mutex_vars: MutexVariables) {
+            static mut LAST_TIME: Lazy<Instant> = Lazy::new(|| Instant::now());
             let mut read_mutex_vars: HydraulicVars = mutex_vars.read_hydraulic_vars().await;
             const ENGINE_RPM: f64 = 4825.;
             static mut SYS1_AC_PUMP_CONTROLLER: bool = false;
@@ -206,6 +202,32 @@ impl HydraulicSystem {
             unsafe { *LAST_TIME = current_time };
         }
 
-        system_1(hydraulic_fluid, mutex_vars).await;
+        async fn system_2(fluid: HydraulicFluid, mutex_vars: MutexVariables) {
+            static mut LAST_TIME: Lazy<Instant> = Lazy::new(|| Instant::now());
+            let mut read_mutex_vars: HydraulicVars = mutex_vars.read_hydraulic_vars().await;
+            const FLUID_TEMP: f64 = 35.; //TODO: make into mutex
+            let viscosity = fluid.get_viscosity(FLUID_TEMP);
+            // TODO: fn
+            let current_time: Instant = Instant::now();
+
+            mutex_vars.write_hydraulic_vars(read_mutex_vars).await;
+            unsafe { *LAST_TIME = current_time };
+        }
+
+        async fn system_3(fluid: HydraulicFluid, mutex_vars: MutexVariables) {
+            static mut LAST_TIME: Lazy<Instant> = Lazy::new(|| Instant::now());
+            let mut read_mutex_vars: HydraulicVars = mutex_vars.read_hydraulic_vars().await;
+            const FLUID_TEMP: f64 = 35.; // TODO: make into mutex
+            let viscosity = fluid.get_viscosity(FLUID_TEMP);
+            // TODO: fn
+            let current_time: Instant = Instant::now();
+
+            mutex_vars.write_hydraulic_vars(read_mutex_vars).await;
+            unsafe { *LAST_TIME = current_time };
+        }
+
+        system_1(hydraulic_fluid.clone(), mutex_vars.clone()).await;
+        system_2(hydraulic_fluid.clone(), mutex_vars.clone()).await;
+        system_3(hydraulic_fluid.clone(), mutex_vars.clone()).await;
     }
 }

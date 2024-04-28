@@ -181,5 +181,5 @@ pub struct BusVoltages {
 
 #[derive(Debug, Clone)]
 pub struct ElectricState {
-    // we will store state of all electronics power here, bool
+    //TODO: we will store state of all electronics power here, bool
 }
