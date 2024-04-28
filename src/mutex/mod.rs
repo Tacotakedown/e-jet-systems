@@ -1,7 +1,7 @@
 /*
 * structs for all the mutex variables
 */
-use std::sync::Arc;
+use std::{io::Bytes, sync::Arc};
 use tokio::sync::Mutex;
 
 use crate::simconnect::simvars::{Simvars, Units};
@@ -10,13 +10,46 @@ use crate::simconnect::simvars::{Simvars, Units};
 pub struct MutexVariables {
     bus_voltage: Arc<Mutex<BusVoltages>>,
     simulator_variables: Arc<Mutex<SimulatorVariables>>,
+    hydraulic_vars: Arc<Mutex<HydraulicVars>>,
 }
 impl MutexVariables {
-    pub fn new(bus_voltage: BusVoltages, simulator_vars: SimulatorVariables) -> Self {
+    pub fn new(
+        bus_voltage: BusVoltages,
+        simulator_vars: SimulatorVariables,
+        hydraulic_vars: HydraulicVars,
+    ) -> Self {
         Self {
             bus_voltage: Arc::new(Mutex::new(bus_voltage)),
             simulator_variables: Arc::new(Mutex::new(simulator_vars)),
+            hydraulic_vars: Arc::new(Mutex::new(hydraulic_vars)),
         }
+    }
+
+    pub async fn read_bus_voltages(&self) -> BusVoltages {
+        self.bus_voltage.lock().await.clone()
+    }
+
+    pub async fn read_simulator_variables(&self) -> SimulatorVariables {
+        self.simulator_variables.lock().await.clone()
+    }
+
+    pub async fn read_hydraulic_vars(&self) -> HydraulicVars {
+        self.hydraulic_vars.lock().await.clone()
+    }
+
+    pub async fn write_bus_voltages(&self, bus_voltage: BusVoltages) {
+        let mut locked = self.bus_voltage.lock().await;
+        *locked = bus_voltage
+    }
+
+    pub async fn write_simulator_variables(&self, simulator_vars: SimulatorVariables) {
+        let mut locked = self.simulator_variables.lock().await;
+        *locked = simulator_vars
+    }
+
+    pub async fn write_hydraulic_vars(&self, hydraulic_vars: HydraulicVars) {
+        let mut locked = self.hydraulic_vars.lock().await;
+        *locked = hydraulic_vars
     }
 }
 
@@ -98,7 +131,22 @@ pub async fn get_values(vars: MutexVariables) -> Vec<(String, f64, String)> {
     ret_vec
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+pub struct HydraulicVars {
+    pub system1: System1Vars,
+}
+
+#[derive(Debug, Clone)]
+pub struct System1Vars {
+    pub reservoir_level: f64,
+    pub engine_driven_pump_rpm: f64,
+    pub ac_motor_pump_state: bool,
+    pub pre_manifold_pressure: f64,
+    pub post_maifold_pressure: f64,
+    pub lh_thrust_reverser_position: f64,
+}
+
+#[derive(Debug, Clone)]
 pub struct SimulatorVariables {
     pub aileron_controls_position: f64,
     pub elevator_controls_position: f64,
@@ -113,7 +161,7 @@ pub async fn set_vars(mutex: MutexVariables, simulator_vars: SimulatorVariables)
     mutex_vars.rudder_controls_position = simulator_vars.rudder_controls_position;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BusVoltages {
     pub ac_bus1: f64,
     pub ac_bus2: f64,
@@ -131,7 +179,7 @@ pub struct BusVoltages {
     pub apu_start_bus: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ElectricState {
     // we will store state of all electronics power here, bool
 }

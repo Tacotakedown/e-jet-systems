@@ -1,6 +1,8 @@
 use tokio::task;
 
-use crate::mutex::{BusVoltages, ElectricState, MutexVariables, SimulatorVariables};
+use crate::mutex::{
+    BusVoltages, ElectricState, HydraulicVars, MutexVariables, SimulatorVariables, System1Vars,
+};
 use crate::server::api_factory;
 use crate::simconnect::Simconnect;
 use crate::systems::{brake_system, electrical, hydraulic_system};
@@ -36,11 +38,21 @@ async fn main() {
             elevator_controls_position: 0.0,
             rudder_controls_position: 0.0,
         },
+        HydraulicVars {
+            system1: System1Vars {
+                reservoir_level: 12.3,
+                engine_driven_pump_rpm: 0.0,
+                ac_motor_pump_state: false,
+                pre_manifold_pressure: 0.0,
+                post_maifold_pressure: 0.0,
+                lh_thrust_reverser_position: 0.0,
+            },
+        },
     );
 
     let brake_thread = task::spawn(brake_system());
     let electrical_thread = task::spawn(electrical());
-    let hydraulic_thread = task::spawn(hydraulic_system());
+    let hydraulic_thread = task::spawn(hydraulic_system(mutex_vars));
 
     let api_thread = task::spawn(api_factory());
 

@@ -6,6 +6,7 @@ the fluid that is simulated is Philipps 66 X/C 5606J
 | ISO Grade | 15 |
 | Gravity, °API | 31.0|
 | Specific Gravity @ 60°F | 0.871 |
+| Bulk Modulus | 145037.7 psi⁻¹  |
 | Density, lbs/gal @ 60°F | 7.25 | 
 | Color, Visual |  Red | 
 | Flash Point (PMCC), °C (°F) |  90 (194) |
@@ -32,5 +33,4 @@ the fluid that is simulated is Philipps 66 X/C 5606J
 | 51-100 | 5
 | 100+ | 0
 | Water Content, ASTM D6304, ppm  |60
-
 

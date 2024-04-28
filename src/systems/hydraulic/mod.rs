@@ -15,10 +15,16 @@ use std::collections::HashMap;
 use std::process::Command;
 use tokio::time::Instant;
 
+use crate::mutex::MutexVariables;
+use crate::systems::hydraulic::filter_manifold::FilterManifold;
+use crate::systems::shared::reduce_by_percentage;
+
 use self::fluid::HydraulicFluid;
 use self::hydraulic_line::HydraulicLineMaterial;
 use self::pump::{ac_motor_pump::AcMotorPump, engine_driven_pump::EngineDrivenHydraulicPump};
 use self::reservoir::Reservoir;
+
+use crate::mutex::{HydraulicVars, System1Vars};
 
 fn clear() {
     if cfg!(windows) {
@@ -106,29 +112,26 @@ impl HydraulicSystem {
         self.connections.push(connection);
     }
 
-    async fn simulate(&self, system_1_pressure: Arc<Mutex<f64>>) {
+    pub async fn simulate(&self, mutex_vars: MutexVariables) {
         static mut LAST_TIME: Lazy<Instant> = Lazy::new(|| Instant::now());
 
         let hydraulic_fluid = HydraulicFluid::new();
 
         //  SYSTEM 1
-        async fn system_1(fluid: HydraulicFluid, sys_1_pressure: Arc<Mutex<f64>>) {
-            static mut RESERVOIR_LEVEL: f64 = 12.3; // TODO: mutex var
-            static mut ENGINE_RPM: f64 = 4825.;
+        async fn system_1(fluid: HydraulicFluid, mutex_vars: MutexVariables) {
+            let mut read_mutex_vars: HydraulicVars = mutex_vars.read_hydraulic_vars().await;
+            const ENGINE_RPM: f64 = 4825.;
             static mut SYS1_AC_PUMP_CONTROLLER: bool = false;
-
-            let mut pressure_lock = sys_1_pressure.lock().await;
 
             const FLUID_TEMP: f64 = 35.;
 
             let viscosity = fluid.get_viscosity(FLUID_TEMP);
 
             let mut reservoir = Reservoir::new();
-            reservoir.set_fluid_level(unsafe { RESERVOIR_LEVEL });
+            reservoir.set_fluid_level(read_mutex_vars.system1.reservoir_level);
 
             let mut engine_driven_pump = EngineDrivenHydraulicPump::new();
-            engine_driven_pump.set_engine_rpm(unsafe { ENGINE_RPM });
-            engine_driven_pump.enable_compensator();
+            engine_driven_pump.set_engine_rpm(ENGINE_RPM);
 
             let mut elec_pump = AcMotorPump::new();
             elec_pump.set_power_state(unsafe { SYS1_AC_PUMP_CONTROLLER });
@@ -141,16 +144,13 @@ impl HydraulicSystem {
 
             let ac_pump_flow = elec_pump.get_output(dt);
 
-            let mut pressure = pressure_lock.clone();
-            pressure = pa_to_psi(pressure);
-
-            if pressure >= 3000. {
+            if pa_to_psi(read_mutex_vars.system1.pre_manifold_pressure) >= 3000. {
                 engine_driven_pump.disable_compensator();
             } else {
                 engine_driven_pump.enable_compensator()
             }
 
-            if pressure >= 2700. {
+            if pa_to_psi(read_mutex_vars.system1.pre_manifold_pressure) >= 2700. {
                 unsafe { SYS1_AC_PUMP_CONTROLLER = false }
             } else {
                 unsafe { SYS1_AC_PUMP_CONTROLLER = true }
@@ -158,41 +158,54 @@ impl HydraulicSystem {
 
             let mut flow_this_tick = engine_driven_pump.calculate_volume_flow(dt);
 
-            if unsafe { RESERVOIR_LEVEL - flow_this_tick } <= 0. {
-                flow_this_tick = unsafe { RESERVOIR_LEVEL }
+            if read_mutex_vars.system1.reservoir_level - flow_this_tick <= 0. {
+                flow_this_tick = read_mutex_vars.system1.reservoir_level
             }
 
-            unsafe { RESERVOIR_LEVEL -= flow_this_tick + ac_pump_flow }
+            read_mutex_vars.system1.reservoir_level -= flow_this_tick + ac_pump_flow;
             const CROSS_SECTIONAL_AREA: f64 = 0.009;
 
             let velocity = (flow_this_tick + ac_pump_flow) / (CROSS_SECTIONAL_AREA / 100.);
             let pressure_increase = 0.5 * fluid.density_kg_m_3_60f * velocity.powf(2.)
                 + engine_driven_pump.get_leakback();
 
-            *pressure_lock += pressure_increase;
+            read_mutex_vars.system1.pre_manifold_pressure += pressure_increase;
 
             fn pa_to_psi(pressure_pa: f64) -> f64 {
                 const PSI_TO_PA: f64 = 6894.76;
                 pressure_pa / PSI_TO_PA
             }
             clear();
-            println!("pressure: {:.4}", pa_to_psi(*pressure_lock));
 
             println!(
-                "\rlevel:{:.4} flow: {:.4}",
-                unsafe { RESERVOIR_LEVEL },
-                flow_this_tick + ac_pump_flow
+                "\rPressure pre manifold: {:.4} \nPressure at actuators: {:.4}\nReservoir level:{:.4} \nFlow: {:.4}",
+               pa_to_psi(read_mutex_vars.system1.pre_manifold_pressure),
+                pa_to_psi(read_mutex_vars.system1.post_maifold_pressure),
+                read_mutex_vars.system1.reservoir_level,
+                flow_this_tick + ac_pump_flow,
             );
 
-            unsafe { *LAST_TIME = current_time };
+            let filter_manifold = FilterManifold::new(15.0);
+            let pressure_drop =
+                filter_manifold.calculate_pressure_drop(flow_this_tick / 60., viscosity);
 
-            drop(pressure_lock);
+            read_mutex_vars.system1.post_maifold_pressure =
+                read_mutex_vars.system1.pre_manifold_pressure - pressure_drop * 6894.76;
+
+            let percentage_compressability = fluid.get_volume_change_from_compression_percent(
+                pa_to_psi(read_mutex_vars.system1.pre_manifold_pressure),
+                15.,
+            );
+
+            let returned_to_res = reduce_by_percentage(flow_this_tick, percentage_compressability);
+
+            read_mutex_vars.system1.reservoir_level += returned_to_res;
+
+            mutex_vars.write_hydraulic_vars(read_mutex_vars).await;
+
+            unsafe { *LAST_TIME = current_time };
         }
 
-        system_1(hydraulic_fluid, system_1_pressure).await;
-    }
-
-    pub async fn simulate_system_async(&mut self, system_1_pressure: Arc<Mutex<f64>>) {
-        self.simulate(system_1_pressure).await
+        system_1(hydraulic_fluid, mutex_vars).await;
     }
 }

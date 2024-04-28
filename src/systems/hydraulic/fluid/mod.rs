@@ -19,6 +19,7 @@ pub struct ParticulateContamination {
 pub struct HydraulicFluid {
     pub iso_grade: u8,
     pub gravity_api: f64,
+    pub bulk_modulus: f64,
     pub specific_gravity_60f: f64,
     pub density_kg_m_3_60f: f64,
     pub color: String,
@@ -43,6 +44,7 @@ impl HydraulicFluid {
         Self {
             iso_grade: 15,
             gravity_api: 31.0,
+            bulk_modulus: 1e-9,
             specific_gravity_60f: 0.871,
             density_kg_m_3_60f: 119.826,
             color: String::from("Red"),
@@ -90,5 +92,13 @@ impl HydraulicFluid {
                 (self.viscosity_cst.c_st_100c - self.viscosity_cst.c_st_40c) / (100. - 40.);
             self.viscosity_cst.c_st_40c + interpolate * (temperature_c - 40.)
         }
+    }
+    pub fn get_volume_change_from_compression_percent(
+        &self,
+        pressure_psi: f64,
+        volume: f64,
+    ) -> f64 {
+        let delta_v = volume * self.bulk_modulus * pressure_psi;
+        (delta_v / volume) * 100.
     }
 }

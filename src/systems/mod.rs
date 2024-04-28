@@ -2,6 +2,8 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
 
+use crate::mutex::MutexVariables;
+
 use self::{
     brakes::{brake_location::BrakePosition, brake_materials::BrakeMaterials, BrakeSystem},
     electric::{busses::Busses, current_type::CurrentType, ElectricalSystem},
@@ -99,7 +101,7 @@ pub async fn brake_system() -> BrakeSystem {
     }
 }
 
-pub async fn hydraulic_system() {
+pub async fn hydraulic_system(mutex_vars: MutexVariables) {
     let mut hydraulic = HydraulicSystem::new();
 
     // building system 1 components
@@ -456,12 +458,8 @@ pub async fn hydraulic_system() {
 
     // system 1 and 2 connections (PTU)
 
-    let sys_1_pressure = Arc::new(Mutex::new(0.0));
-
     loop {
-        hydraulic
-            .simulate_system_async(sys_1_pressure.clone())
-            .await;
+        hydraulic.simulate(mutex_vars.clone()).await;
         sleep(TICK_SLEEP_DURATION).await;
     }
 }
