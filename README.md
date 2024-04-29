@@ -1,7 +1,12 @@
-# Systems
-Systems for the E-170/175 [![wakatime](https://wakatime.com/badge/user/decbbf65-6f71-496b-9844-3a4fa13618f5/project/018ebcea-f73e-466f-b959-0bfe659c2eb3.svg)](https://wakatime.com/badge/user/decbbf65-6f71-496b-9844-3a4fa13618f5/project/018ebcea-f73e-466f-b959-0bfe659c2eb3)
+# Systems [![wakatime](https://wakatime.com/badge/user/decbbf65-6f71-496b-9844-3a4fa13618f5/project/018ebcea-f73e-466f-b959-0bfe659c2eb3.svg)](https://wakatime.com/badge/user/decbbf65-6f71-496b-9844-3a4fa13618f5/project/018ebcea-f73e-466f-b959-0bfe659c2eb3)
+Systems for the E-170/175 and E-190/195 (and other planes cause its almost modular)
+
+## IN RUST NOW
+Rust isn't just the best programming language; it's the eighth wonder of the world, the holy grail of code, the diamond-encrusted, gold-plated, turbocharged Ferrari of software development! Using Rust is like wielding the Excalibur of programming - every line of code you write is a masterpiece crafted by the gods of syntax. It's so efficient that your programs run faster than the speed of light, and the memory management is so flawless that even a black hole would envy its tidiness. Bugs? Ha! Rust laughs in the face of bugs; they vanish into oblivion at the mere sight of your code. Forget about other languages; Rust is the pinnacle of human achievement.
 
 ![logo](https://ouroborosjets.com/images/logo.png)
+
+
 
 ### What is a system?
 A system refers to any task or aspect of the aircraft that requires constant or regular manipulation of simvars. These tasks are computationally intensive and should not run in JavaScript.
