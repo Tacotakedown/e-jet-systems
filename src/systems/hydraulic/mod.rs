@@ -153,7 +153,10 @@ impl HydraulicSystem {
                 unsafe { SYS1_AC_PUMP_CONTROLLER = true }
             }
 
-            let mut flow_this_tick = engine_driven_pump.calculate_volume_flow(dt);
+            let mut flow_this_tick = engine_driven_pump.calculate_volume_flow(
+                dt,
+                pa_to_psi(read_mutex_vars.system1.pre_manifold_pressure),
+            );
 
             if read_mutex_vars.system1.reservoir_level - flow_this_tick <= 0. {
                 flow_this_tick = read_mutex_vars.system1.reservoir_level

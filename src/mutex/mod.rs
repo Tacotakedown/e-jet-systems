@@ -10,7 +10,7 @@ use crate::simconnect::simvars::{Simvars, Units};
 pub struct MutexVariables {
     bus_voltage: Arc<Mutex<BusVoltages>>,
     simulator_variables: Arc<Mutex<SimulatorVariables>>,
-    hydraulic_vars: Arc<Mutex<HydraulicVars>>,
+    pub hydraulic_vars: Arc<Mutex<HydraulicVars>>,
 }
 impl MutexVariables {
     pub fn new(

@@ -22,12 +22,13 @@ async fn main() {
         400.0,
         300.0,
         "Systems".to_string(),
-        1,
     )));
+
+    let pressure_mutex = Arc::new(Mutex::new(Vec::new()));
 
     let simconnect = Simconnect::new("OBJ_SIMCONNECT".to_string());
 
-    let mut render_gui = DebugGui::new(1000.0, 800.0, "Systems".to_string(), 1);
+    let mut render_gui = DebugGui::new(1000.0, 800.0, "Systems".to_string());
 
     let mutex_vars = MutexVariables::new(
         BusVoltages {
@@ -72,9 +73,13 @@ async fn main() {
 
     println!("REST API server running on port 3030");
 
-    let ui_updater_handle = tokio::spawn(ui_updater(mutex_vars.clone(), gui.clone()));
+    let ui_updater_handle = tokio::spawn(ui_updater(
+        mutex_vars.clone(),
+        gui.clone(),
+        pressure_mutex.clone(),
+    ));
 
-    if let Err(err) = render_gui.render(gui.clone()).await {
+    if let Err(err) = render_gui.render(gui.clone(), pressure_mutex.clone()).await {
         eprintln!("Error rendering GUI: {:?}", err);
     }
 

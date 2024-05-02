@@ -39,18 +39,24 @@ impl EngineDrivenHydraulicPump {
         self.conpensator_enabled = false;
     }
 
-    pub fn calculate_volume_flow(&self, dt: f64) -> f64 {
+    pub fn calculate_volume_flow(&self, dt: f64, pressure: f64) -> f64 {
         if !self.conpensator_enabled {
             return -0.0;
         }
-        const STEP_DOWN_GEAR: f64 = 1.0; //TODO: need some further information as i assume its not 1 to 1 gearing between engine and pump
+
+        const STEP_DOWN_GEAR: f64 = 1.0; // Assuming 1:1 gearing between engine and pump
+        const RATED_PRESSURE: f64 = 3000.0; // Assuming rated output flow is at 3000 pressure units
+
         let rpm = self.engine_rpm;
         let rpm_delta = (rpm * STEP_DOWN_GEAR) / self.operating_rpm;
-        let volume_flow_rate = self.rated_output_flow_l_min * rpm_delta;
 
+        let pressure_factor = calculate_pressure_factor(pressure, RATED_PRESSURE);
+        let volume_flow_rate = self.rated_output_flow_l_min * rpm_delta * pressure_factor;
         let volume_flow_rate_m3_s = volume_flow_rate * 0.001;
+
         volume_flow_rate_m3_s * dt
     }
+
     pub fn get_leakback(&self) -> f64 {
         if !self.conpensator_enabled {
             -10.1
@@ -58,4 +64,12 @@ impl EngineDrivenHydraulicPump {
             0.
         }
     }
+}
+
+fn calculate_pressure_factor(pressure: f64, rated_pressure: f64) -> f64 {
+    // This is an example function that increases the factor non-linearly as pressure decreases
+    // You can modify this function to suit your specific requirements
+    let pressure_ratio = pressure / rated_pressure;
+    let factor = 1.0 + (1.0 - pressure_ratio).powf(2.0);
+    factor
 }

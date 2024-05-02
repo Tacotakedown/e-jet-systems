@@ -1,47 +1,56 @@
+use eframe::egui;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use std::time::Instant;
 use tokio::time::sleep;
 
-use eframe::egui;
+pub mod plotter;
 
 use crate::mutex::{HydraulicVars, MutexVariables, System1Vars};
 use crate::systems::hydraulic::math::pa_to_psi;
+use plotter::PressureData;
 
 #[derive(Debug)]
 pub struct DebugGui {
     width: f32,
     height: f32,
     name: String,
-    last_update_time: Instant,
     cached_data: Option<Vec<(String, f64, String)>>,
-    update_interval: Duration,
+    pressure_data: Vec<f64>,
 }
 
 impl DebugGui {
-    pub fn new(width: f32, height: f32, name: String, update_interval_secs: u64) -> Self {
+    pub fn new(width: f32, height: f32, name: String) -> Self {
         Self {
             width,
             height,
             name,
-            last_update_time: Instant::now(),
             cached_data: None,
-            update_interval: Duration::from_secs(update_interval_secs),
+            pressure_data: Vec::new(),
         }
     }
 
-    pub async fn render(&mut self, gui: Arc<Mutex<DebugGui>>) -> Result<(), eframe::Error> {
+    pub async fn render(
+        &mut self,
+        gui: Arc<Mutex<DebugGui>>,
+        pressure_data: Arc<Mutex<Vec<f64>>>,
+    ) -> Result<(), eframe::Error> {
         let options = eframe::NativeOptions {
             viewport: egui::ViewportBuilder::default().with_inner_size([self.width, self.height]),
             ..Default::default()
         };
-
+        let pressure_data_clone = pressure_data.clone();
         eframe::run_simple_native(&self.name, options, move |ctx, _frame| {
             let gui = gui.lock().unwrap();
             let cached_data = gui.cached_data.clone();
 
+            let pressure_data = pressure_data_clone.lock().unwrap();
+            let points = pressure_data.clone();
+
             egui::CentralPanel::default().show(ctx, |ui| {
                 ui.label(format!("System Vars: {:?}", cached_data));
+                ui.end_row();
+                example_plot(ui, points);
+                ui.end_row();
             });
 
             ctx.request_repaint();
@@ -95,14 +104,44 @@ pub async fn get_values(mutex_vars: MutexVariables) -> Vec<(String, f64, String)
     ret_vec
 }
 
-pub async fn ui_updater(mutex_vars: MutexVariables, gui: Arc<Mutex<DebugGui>>) {
+pub async fn ui_updater(
+    mutex_vars: MutexVariables,
+    gui: Arc<Mutex<DebugGui>>,
+    pressure_data: Arc<Mutex<Vec<f64>>>,
+) {
+    let mut pressure_data_struct = PressureData::new(1000);
     loop {
         let fut = get_values(mutex_vars.clone()).await;
+        let pressure = mutex_vars.clone().read_hydraulic_vars().await;
+
         if !fut.is_empty() {
             let mut gui = gui.lock().unwrap();
             gui.cached_data = Some(fut);
+            pressure_data_struct.add_value(pa_to_psi(pressure.system1.pre_manifold_pressure));
+            let mut pressure_data_mutex = pressure_data.lock().unwrap();
+            *pressure_data_mutex = pressure_data_struct.get_values();
         }
 
-        sleep(Duration::from_millis(100)).await;
+        tokio::time::sleep(Duration::from_millis(100)).await;
     }
+}
+
+fn example_plot(ui: &mut egui::Ui, points: Vec<f64>) -> egui::Response {
+    use egui_plot::{Line, PlotPoints};
+
+    let spacing_factor = 50.0;
+
+    let line_points: PlotPoints = points
+        .iter()
+        .enumerate()
+        .map(|(i, &value)| [i as f64 * spacing_factor, value])
+        .collect();
+
+    let line = Line::new(line_points);
+    egui_plot::Plot::new("example_plot")
+        .height(500.0)
+        .show_axes(true)
+        .data_aspect(1.0)
+        .show(ui, |plot_ui| plot_ui.line(line))
+        .response
 }
