@@ -31,7 +31,7 @@ async fn main() {
 
     let simconnect = Simconnect::new("OBJ_SIMCONNECT".to_string());
 
-    let mut render_gui = DebugGui::new(1800.0, 1500.0, "Systems".to_string());
+    let mut render_gui = DebugGui::new(1800.0, 1000.0, "Systems".to_string());
 
     let mutex_vars = MutexVariables::new(
         BusVoltages {
