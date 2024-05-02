@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use std::time::Duration;
+use std::{sync::Arc, time::Instant};
 use tokio::sync::Mutex;
 
 use crate::mutex::MutexVariables;
@@ -7,6 +7,7 @@ use crate::mutex::MutexVariables;
 use self::{
     brakes::{brake_location::BrakePosition, brake_materials::BrakeMaterials, BrakeSystem},
     electric::{busses::Busses, current_type::CurrentType, ElectricalSystem},
+    flight_controls::{spoilers::spoiler_logic::SpoilerController, FlightControls},
     hydraulic::{
         components::{E170HydraulicComponents, E170System1, E170System2, E170System3},
         hydraulic_line::HydraulicLineMaterial,
@@ -461,5 +462,40 @@ pub async fn hydraulic_system(mutex_vars: MutexVariables) {
     loop {
         hydraulic.simulate(mutex_vars.clone()).await;
         sleep(TICK_SLEEP_DURATION).await;
+    }
+}
+
+pub async fn flight_controls(mutex_vars: MutexVariables) {
+    let mut flt_controls = FlightControls::new();
+    flt_controls.with_spoilers();
+    let simulator_vars_building_lifetime = mutex_vars.read_simulator_variables().await;
+    static mut ON_GROUND: bool = false;
+    static mut LANDING_CONFIG: bool = false;
+    let mut spoiler_controller = SpoilerController::new(
+        simulator_vars_building_lifetime.aileron_controls_position,
+        unsafe { ON_GROUND },
+        simulator_vars_building_lifetime.spoiler_handle_0_to_100,
+        unsafe { LANDING_CONFIG },
+    );
+
+    static mut PREV_TIME: Instant = Instant::now();
+    loop {
+        let current_time = Instant::now();
+        let dt = unsafe { current_time.duration_since(unsafe { PREV_TIME }) };
+        let mut simulator_vars = mutex_vars.read_simulator_variables().await;
+        let mut hydraulic_vars = mutex_vars.read_hydraulic_vars().await;
+        flt_controls.update(
+            unsafe { ON_GROUND },
+            simulator_vars.aileron_controls_position,
+            hydraulic_vars.system1.post_maifold_pressure,
+            simulator_vars.spoiler_handle_0_to_100,
+            unsafe { LANDING_CONFIG },
+            &mut spoiler_controller,
+            dt,
+        );
+
+        mutex_vars.write_simulator_variables(simulator_vars);
+
+        unsafe { PREV_TIME = current_time };
     }
 }

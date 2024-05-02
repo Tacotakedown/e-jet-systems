@@ -10,7 +10,7 @@ use crate::mutex::{
 };
 use crate::server::api_factory;
 use crate::simconnect::Simconnect;
-use crate::systems::{brake_system, electrical, hydraulic_system};
+use crate::systems::{brake_system, electrical, flight_controls, hydraulic_system};
 
 mod debug_gui;
 mod mutex;
@@ -28,6 +28,7 @@ async fn main() {
 
     let data_mutex = Arc::new(Mutex::new(HashMap::new()));
     let button_mutex = Arc::new(Mutex::new(HashMap::new()));
+    let gui_simvar_mutex = Arc::new(Mutex::new(HashMap::new()));
 
     let simconnect = Simconnect::new("OBJ_SIMCONNECT".to_string());
 
@@ -70,6 +71,7 @@ async fn main() {
     let brake_thread = tokio::spawn(brake_system());
     let electrical_thread = tokio::spawn(electrical());
     let hydraulic_thread = tokio::spawn(hydraulic_system(mutex_vars.clone()));
+    let flight_control = tokio::spawn(flight_controls(mutex_vars.clone()));
 
     let api_thread = tokio::spawn(api_factory());
     // let simvar_update_thread = task::spawn(simconnect.update(mutex_vars));
@@ -81,10 +83,16 @@ async fn main() {
         gui.clone(),
         data_mutex.clone(),
         button_mutex.clone(),
+        gui_simvar_mutex.clone(),
     ));
 
     if let Err(err) = render_gui
-        .render(gui.clone(), data_mutex.clone(), button_mutex.clone())
+        .render(
+            gui.clone(),
+            data_mutex.clone(),
+            button_mutex.clone(),
+            gui_simvar_mutex.clone(),
+        )
         .await
     {
         eprintln!("Error rendering GUI: {:?}", err);

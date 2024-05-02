@@ -94,7 +94,7 @@ impl SpoilerController {
                         r5: demanded_spoiler_position,
                     };
                     self.spoiler_position = updated_spoiler.clone();
-                    return updated_spoiler;
+                    updated_spoiler
                 }
                 false => {
                     // need to probe the handle position to make sure its at 0 (above 0 will be manual deploy, at 0 will be with ailerons)
@@ -124,7 +124,7 @@ impl SpoilerController {
                             r5: demanded_spoiler_pos_right,
                         };
                         self.spoiler_position = updated_spoiler.clone();
-                        return updated_spoiler;
+                        updated_spoiler
                     } else {
                         let demanded_spoiler_position = Self::spoiler_handle_to_demanded_position(
                             self.speed_brake_handle_poition_0_to_100,
@@ -143,7 +143,7 @@ impl SpoilerController {
                             r5: demanded_spoiler_position,
                         };
                         self.spoiler_position = updated_spoiler.clone();
-                        return updated_spoiler;
+                        updated_spoiler
                     }
                 }
             }, // manual deploy / assist ailerons

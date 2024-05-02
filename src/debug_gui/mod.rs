@@ -8,7 +8,7 @@ use tokio::time::sleep;
 
 pub mod plotter;
 
-use crate::mutex::{HydraulicVars, MutexVariables, System1Vars};
+use crate::mutex::{HydraulicVars, MutexVariables, SimulatorVariables, System1Vars};
 use crate::systems::hydraulic::math::pa_to_psi;
 use plotter::PressureData;
 
@@ -35,6 +35,7 @@ impl DebugGui {
         gui: Arc<Mutex<DebugGui>>,
         data: Arc<Mutex<HashMap<String, Vec<f64>>>>,
         buttons: Arc<Mutex<HashMap<String, bool>>>,
+        sim_vars: Arc<Mutex<HashMap<String, f64>>>,
     ) -> Result<(), eframe::Error> {
         let options = eframe::NativeOptions {
             viewport: egui::ViewportBuilder::default().with_inner_size([self.width, self.height]),
@@ -57,7 +58,12 @@ impl DebugGui {
                 .cloned()
                 .unwrap_or_default();
 
+            static mut ELEC_BUTTON_STATE: bool = false;
+            static mut AILERON_SLIDER: f64 = 0.0;
+
             egui::CentralPanel::default().show(ctx, |ui| {
+                let mut locked_simvars = sim_vars.lock().unwrap();
+
                 ui.label("Pumps: Red - pre manifold, Blue - post manifold");
                 ui.end_row();
                 plot_pumps(ui, points, points_post);
@@ -65,7 +71,7 @@ impl DebugGui {
                 ui.label("Reservoir Level");
                 plot_res_level(ui, points_res);
                 ui.end_row();
-                static mut ELEC_BUTTON_STATE: bool = false;
+
                 if ui.button("Toggle Elec Pumps").clicked() {
                     unsafe { ELEC_BUTTON_STATE = !ELEC_BUTTON_STATE }
                     let mut elec_pump_mutex = buttons.lock().unwrap();
@@ -73,7 +79,17 @@ impl DebugGui {
                         .entry("elec_pump_state".to_string())
                         .or_insert(false);
                     *entry = unsafe { ELEC_BUTTON_STATE };
-                }
+                };
+                ui.end_row();
+                ui.label("Aileron Control");
+                ui.add(
+                    egui::Slider::new(unsafe { &mut AILERON_SLIDER }, -40.0..=40.0)
+                        .suffix("degrees"),
+                );
+                locked_simvars.insert("aileron_deflection".to_string(), unsafe { AILERON_SLIDER });
+
+                static mut ON_GROUND: bool = true;
+                ui.checkbox(unsafe { &mut ON_GROUND }, "On Ground");
             });
 
             ctx.request_repaint();
@@ -132,10 +148,12 @@ pub async fn ui_updater(
     gui: Arc<Mutex<DebugGui>>,
     plot_data: Arc<Mutex<HashMap<String, Vec<f64>>>>,
     button_vars: Arc<Mutex<HashMap<String, bool>>>,
+    sim_vars: Arc<Mutex<HashMap<String, f64>>>,
 ) {
     loop {
         let fut = get_values(mutex_vars.clone()).await;
         let vars = mutex_vars.clone().read_hydraulic_vars().await;
+        let simulator_vars = mutex_vars.clone().read_simulator_variables().await;
         let button_vars_clone = button_vars.clone();
         let mut new_hydrauliuc_vars = HydraulicVars {
             system1: System1Vars {
@@ -147,12 +165,22 @@ pub async fn ui_updater(
                 lh_thrust_reverser_position: vars.system1.lh_thrust_reverser_position,
             },
         };
+
+        let mut new_simulator_vars = SimulatorVariables {
+            aileron_controls_position: simulator_vars.aileron_controls_position,
+            rudder_controls_position: simulator_vars.rudder_controls_position,
+            elevator_controls_position: simulator_vars.elevator_controls_position,
+        };
+
         if !fut.is_empty() {
             let mut gui = gui.lock().unwrap();
             let button_vars = button_vars_clone.lock().unwrap();
+
             gui.cached_data = Some(fut);
 
             let mut pressure_data_mutex = plot_data.lock().unwrap();
+            let mut sim_vars_mutex = sim_vars.lock().unwrap();
+
             let pressure_data_vec = pressure_data_mutex
                 .entry("pressure".to_string())
                 .or_insert_with(Vec::new);
@@ -177,6 +205,10 @@ pub async fn ui_updater(
                 reservoir_level_vec.remove(0);
             }
 
+            let aileron_deflection = sim_vars_mutex
+                .entry("aileron_deflection".to_string())
+                .or_insert(0.0);
+
             let elec_pump_new_state = button_vars
                 .get("elec_pump_state")
                 .cloned()
@@ -197,9 +229,18 @@ pub async fn ui_updater(
                     lh_thrust_reverser_position: vars.system1.lh_thrust_reverser_position,
                 },
             };
+
+            new_simulator_vars = SimulatorVariables {
+                aileron_controls_position: *aileron_deflection,
+                rudder_controls_position: simulator_vars.rudder_controls_position,
+                elevator_controls_position: simulator_vars.elevator_controls_position,
+            }
         }
 
         mutex_vars.write_hydraulic_vars(new_hydrauliuc_vars).await;
+        mutex_vars
+            .write_simulator_variables(new_simulator_vars)
+            .await;
 
         tokio::time::sleep(Duration::from_millis(60)).await;
     }
@@ -227,8 +268,8 @@ fn plot_pumps(
     let line1 = Line::new(line_points).color(Color32::RED);
     let line2 = Line::new(line_points_post_manifold).color(Color32::BLUE);
 
-    egui_plot::Plot::new("example_plot")
-        .height(500.0)
+    egui_plot::Plot::new("pump_plot")
+        .height(300.0)
         .show_axes(true)
         .data_aspect(1.0)
         .show(ui, |plot_ui| {
@@ -239,7 +280,7 @@ fn plot_pumps(
 }
 
 fn plot_res_level(ui: &mut egui::Ui, points: Vec<f64>) -> egui::Response {
-    let spacing_factor = 1.0;
+    let spacing_factor = 0.1;
 
     let line_points: PlotPoints = points
         .iter()
@@ -249,8 +290,8 @@ fn plot_res_level(ui: &mut egui::Ui, points: Vec<f64>) -> egui::Response {
 
     let line1 = Line::new(line_points).color(Color32::GOLD);
 
-    egui_plot::Plot::new("example_plot")
-        .height(500.0)
+    egui_plot::Plot::new("res_plot")
+        .height(100.0)
         .show_axes(true)
         .data_aspect(1.0)
         .id(Id::new(32131))

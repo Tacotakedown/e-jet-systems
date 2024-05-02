@@ -151,6 +151,7 @@ pub struct SimulatorVariables {
     pub aileron_controls_position: f64,
     pub elevator_controls_position: f64,
     pub rudder_controls_position: f64,
+    pub spoiler_handle_0_to_100: f64,
 }
 
 pub async fn set_vars(mutex: MutexVariables, simulator_vars: SimulatorVariables) {
