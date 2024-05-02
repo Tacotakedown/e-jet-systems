@@ -1,4 +1,6 @@
+use eframe::egui::MultiTouchInfo;
 use futures::executor::block_on;
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::task;
 
@@ -24,7 +26,7 @@ async fn main() {
         "Systems".to_string(),
     )));
 
-    let pressure_mutex = Arc::new(Mutex::new(Vec::new()));
+    let data_mutex = Arc::new(Mutex::new(HashMap::new()));
 
     let simconnect = Simconnect::new("OBJ_SIMCONNECT".to_string());
 
@@ -76,10 +78,10 @@ async fn main() {
     let ui_updater_handle = tokio::spawn(ui_updater(
         mutex_vars.clone(),
         gui.clone(),
-        pressure_mutex.clone(),
+        data_mutex.clone(),
     ));
 
-    if let Err(err) = render_gui.render(gui.clone(), pressure_mutex.clone()).await {
+    if let Err(err) = render_gui.render(gui.clone(), data_mutex.clone()).await {
         eprintln!("Error rendering GUI: {:?}", err);
     }
 
