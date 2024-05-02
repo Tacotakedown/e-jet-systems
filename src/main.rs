@@ -27,10 +27,11 @@ async fn main() {
     )));
 
     let data_mutex = Arc::new(Mutex::new(HashMap::new()));
+    let button_mutex = Arc::new(Mutex::new(HashMap::new()));
 
     let simconnect = Simconnect::new("OBJ_SIMCONNECT".to_string());
 
-    let mut render_gui = DebugGui::new(1000.0, 800.0, "Systems".to_string());
+    let mut render_gui = DebugGui::new(1800.0, 1500.0, "Systems".to_string());
 
     let mutex_vars = MutexVariables::new(
         BusVoltages {
@@ -79,9 +80,13 @@ async fn main() {
         mutex_vars.clone(),
         gui.clone(),
         data_mutex.clone(),
+        button_mutex.clone(),
     ));
 
-    if let Err(err) = render_gui.render(gui.clone(), data_mutex.clone()).await {
+    if let Err(err) = render_gui
+        .render(gui.clone(), data_mutex.clone(), button_mutex.clone())
+        .await
+    {
         eprintln!("Error rendering GUI: {:?}", err);
     }
 

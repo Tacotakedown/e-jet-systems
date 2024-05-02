@@ -131,7 +131,7 @@ impl HydraulicSystem {
             engine_driven_pump.set_engine_rpm(ENGINE_RPM);
 
             let mut elec_pump = AcMotorPump::new();
-            elec_pump.set_power_state(unsafe { SYS1_AC_PUMP_CONTROLLER });
+            elec_pump.set_power_state(read_mutex_vars.system1.ac_motor_pump_state);
 
             let current_time: Instant = Instant::now();
             let last_time = unsafe { addr_of!(LAST_TIME) };
@@ -139,19 +139,21 @@ impl HydraulicSystem {
                 .duration_since(unsafe { **last_time })
                 .as_secs_f64();
 
-            let ac_pump_flow = elec_pump.get_output(dt);
-
             if pa_to_psi(read_mutex_vars.system1.pre_manifold_pressure) >= 3000. {
                 engine_driven_pump.disable_compensator();
             } else {
-                engine_driven_pump.enable_compensator()
+                engine_driven_pump.enable_compensator();
+                // engine_driven_pump.disable_compensator();
             }
 
             if pa_to_psi(read_mutex_vars.system1.pre_manifold_pressure) >= 2700. {
-                unsafe { SYS1_AC_PUMP_CONTROLLER = false }
+                elec_pump.set_pressure_override(true);
             } else {
-                unsafe { SYS1_AC_PUMP_CONTROLLER = true }
+                elec_pump.set_pressure_override(false);
             }
+
+            let mut ac_pump_flow =
+                elec_pump.get_output(dt, pa_to_psi(read_mutex_vars.system1.pre_manifold_pressure));
 
             let mut flow_this_tick = engine_driven_pump.calculate_volume_flow(
                 dt,
@@ -160,6 +162,9 @@ impl HydraulicSystem {
 
             if read_mutex_vars.system1.reservoir_level - flow_this_tick <= 0. {
                 flow_this_tick = read_mutex_vars.system1.reservoir_level
+            }
+            if read_mutex_vars.system1.reservoir_level - ac_pump_flow <= 0. {
+                ac_pump_flow = read_mutex_vars.system1.reservoir_level
             }
 
             read_mutex_vars.system1.reservoir_level -= flow_this_tick + ac_pump_flow;

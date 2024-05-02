@@ -34,6 +34,7 @@ impl DebugGui {
         &mut self,
         gui: Arc<Mutex<DebugGui>>,
         data: Arc<Mutex<HashMap<String, Vec<f64>>>>,
+        buttons: Arc<Mutex<HashMap<String, bool>>>,
     ) -> Result<(), eframe::Error> {
         let options = eframe::NativeOptions {
             viewport: egui::ViewportBuilder::default().with_inner_size([self.width, self.height]),
@@ -64,6 +65,15 @@ impl DebugGui {
                 ui.label("Reservoir Level");
                 plot_res_level(ui, points_res);
                 ui.end_row();
+                static mut ELEC_BUTTON_STATE: bool = false;
+                if ui.button("Toggle Elec Pumps").clicked() {
+                    unsafe { ELEC_BUTTON_STATE = !ELEC_BUTTON_STATE }
+                    let mut elec_pump_mutex = buttons.lock().unwrap();
+                    let entry = elec_pump_mutex
+                        .entry("elec_pump_state".to_string())
+                        .or_insert(false);
+                    *entry = unsafe { ELEC_BUTTON_STATE };
+                }
             });
 
             ctx.request_repaint();
@@ -121,20 +131,32 @@ pub async fn ui_updater(
     mutex_vars: MutexVariables,
     gui: Arc<Mutex<DebugGui>>,
     plot_data: Arc<Mutex<HashMap<String, Vec<f64>>>>,
+    button_vars: Arc<Mutex<HashMap<String, bool>>>,
 ) {
     loop {
         let fut = get_values(mutex_vars.clone()).await;
-        let pressure = mutex_vars.clone().read_hydraulic_vars().await;
-
+        let vars = mutex_vars.clone().read_hydraulic_vars().await;
+        let button_vars_clone = button_vars.clone();
+        let mut new_hydrauliuc_vars = HydraulicVars {
+            system1: System1Vars {
+                reservoir_level: vars.system1.reservoir_level,
+                engine_driven_pump_rpm: vars.system1.engine_driven_pump_rpm,
+                ac_motor_pump_state: false,
+                pre_manifold_pressure: vars.system1.pre_manifold_pressure,
+                post_maifold_pressure: vars.system1.post_maifold_pressure,
+                lh_thrust_reverser_position: vars.system1.lh_thrust_reverser_position,
+            },
+        };
         if !fut.is_empty() {
             let mut gui = gui.lock().unwrap();
+            let button_vars = button_vars_clone.lock().unwrap();
             gui.cached_data = Some(fut);
 
             let mut pressure_data_mutex = plot_data.lock().unwrap();
             let pressure_data_vec = pressure_data_mutex
                 .entry("pressure".to_string())
                 .or_insert_with(Vec::new);
-            pressure_data_vec.push(pa_to_psi(pressure.system1.pre_manifold_pressure));
+            pressure_data_vec.push(pa_to_psi(vars.system1.pre_manifold_pressure));
             if pressure_data_vec.len() > 2000 {
                 pressure_data_vec.remove(0);
             }
@@ -142,7 +164,7 @@ pub async fn ui_updater(
             let pressure_data_post_manifold_vec = pressure_data_mutex
                 .entry("post_manifold_pressure".to_string())
                 .or_insert_with(Vec::new);
-            pressure_data_post_manifold_vec.push(pa_to_psi(pressure.system1.post_maifold_pressure));
+            pressure_data_post_manifold_vec.push(pa_to_psi(vars.system1.post_maifold_pressure));
             if pressure_data_post_manifold_vec.len() > 2000 {
                 pressure_data_post_manifold_vec.remove(0);
             }
@@ -150,11 +172,34 @@ pub async fn ui_updater(
             let reservoir_level_vec = pressure_data_mutex
                 .entry("reservoir_level".to_string())
                 .or_insert_with(Vec::new);
-            reservoir_level_vec.push(pressure.system1.reservoir_level);
+            reservoir_level_vec.push(vars.system1.reservoir_level);
             if reservoir_level_vec.len() > 2000 {
                 reservoir_level_vec.remove(0);
             }
+
+            let elec_pump_new_state = button_vars
+                .get("elec_pump_state")
+                .cloned()
+                .unwrap_or_default();
+
+            let engine_pump_new_state = button_vars
+                .get("engine_pump_new_state")
+                .cloned()
+                .unwrap_or_default();
+
+            new_hydrauliuc_vars = HydraulicVars {
+                system1: System1Vars {
+                    reservoir_level: vars.system1.reservoir_level,
+                    engine_driven_pump_rpm: vars.system1.engine_driven_pump_rpm,
+                    ac_motor_pump_state: elec_pump_new_state,
+                    pre_manifold_pressure: vars.system1.pre_manifold_pressure,
+                    post_maifold_pressure: vars.system1.post_maifold_pressure,
+                    lh_thrust_reverser_position: vars.system1.lh_thrust_reverser_position,
+                },
+            };
         }
+
+        mutex_vars.write_hydraulic_vars(new_hydrauliuc_vars).await;
 
         tokio::time::sleep(Duration::from_millis(60)).await;
     }
