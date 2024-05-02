@@ -135,3 +135,8 @@ impl HydraulicMath for HydraulicCalculator {
         pressure_pa + 0.5 * density * (flow_rate / net_cross_sectional_area).powf(2.)
     }
 }
+
+pub fn pa_to_psi(pressure_pa: f64) -> f64 {
+    const PSI_TO_PA: f64 = 6894.76;
+    pressure_pa / PSI_TO_PA
+}

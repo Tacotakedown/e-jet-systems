@@ -1,4 +1,5 @@
 pub mod accumulator;
+pub mod actuators;
 pub mod components;
 pub mod filter_manifold;
 pub mod fluid;
@@ -171,15 +172,15 @@ impl HydraulicSystem {
                 const PSI_TO_PA: f64 = 6894.76;
                 pressure_pa / PSI_TO_PA
             }
-            clear();
+            //clear();
 
-            println!(
-                "\rPressure pre manifold: {:.4} \nPressure at actuators: {:.4}\nReservoir level:{:.4} \nFlow: {:.4}",
-               pa_to_psi(read_mutex_vars.system1.pre_manifold_pressure),
-                pa_to_psi(read_mutex_vars.system1.post_maifold_pressure),
-                read_mutex_vars.system1.reservoir_level,
-                flow_this_tick + ac_pump_flow,
-            );
+            // println!(
+            //     "\rPressure pre manifold: {:.4} \nPressure at actuators: {:.4}\nReservoir level:{:.4} \nFlow: {:.4}",
+            //    pa_to_psi(read_mutex_vars.system1.pre_manifold_pressure),
+            //     pa_to_psi(read_mutex_vars.system1.post_maifold_pressure),
+            //     read_mutex_vars.system1.reservoir_level,
+            //     flow_this_tick + ac_pump_flow,
+            // );
 
             let filter_manifold = FilterManifold::new(15.0);
             let pressure_drop =

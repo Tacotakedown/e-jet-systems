@@ -1,5 +1,8 @@
+use futures::executor::block_on;
+use std::sync::{Arc, Mutex};
 use tokio::task;
 
+use crate::debug_gui::{ui_updater, DebugGui};
 use crate::mutex::{
     BusVoltages, ElectricState, HydraulicVars, MutexVariables, SimulatorVariables, System1Vars,
 };
@@ -7,6 +10,7 @@ use crate::server::api_factory;
 use crate::simconnect::Simconnect;
 use crate::systems::{brake_system, electrical, hydraulic_system};
 
+mod debug_gui;
 mod mutex;
 mod server;
 mod simconnect;
@@ -14,7 +18,16 @@ mod systems;
 
 #[tokio::main]
 async fn main() {
+    let gui = Arc::new(Mutex::new(DebugGui::new(
+        400.0,
+        300.0,
+        "Systems".to_string(),
+        1,
+    )));
+
     let simconnect = Simconnect::new("OBJ_SIMCONNECT".to_string());
+
+    let mut render_gui = DebugGui::new(1000.0, 800.0, "Systems".to_string(), 1);
 
     let mutex_vars = MutexVariables::new(
         BusVoltages {
@@ -50,21 +63,27 @@ async fn main() {
         },
     );
 
-    let brake_thread = task::spawn(brake_system());
-    let electrical_thread = task::spawn(electrical());
-    let hydraulic_thread = task::spawn(hydraulic_system(mutex_vars));
+    let brake_thread = tokio::spawn(brake_system());
+    let electrical_thread = tokio::spawn(electrical());
+    let hydraulic_thread = tokio::spawn(hydraulic_system(mutex_vars.clone()));
 
-    let api_thread = task::spawn(api_factory());
-
+    let api_thread = tokio::spawn(api_factory());
     // let simvar_update_thread = task::spawn(simconnect.update(mutex_vars));
 
     println!("REST API server running on port 3030");
+
+    let ui_updater_handle = tokio::spawn(ui_updater(mutex_vars.clone(), gui.clone()));
+
+    if let Err(err) = render_gui.render(gui.clone()).await {
+        eprintln!("Error rendering GUI: {:?}", err);
+    }
 
     let _ = tokio::try_join!(
         brake_thread,
         electrical_thread,
         hydraulic_thread,
         api_thread,
+        ui_updater_handle,
         //  simvar_update_thread
     );
 }
