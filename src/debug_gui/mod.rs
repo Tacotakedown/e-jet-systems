@@ -170,6 +170,7 @@ pub async fn ui_updater(
             aileron_controls_position: simulator_vars.aileron_controls_position,
             rudder_controls_position: simulator_vars.rudder_controls_position,
             elevator_controls_position: simulator_vars.elevator_controls_position,
+            spoiler_handle_0_to_100: simulator_vars.spoiler_handle_0_to_100,
         };
 
         if !fut.is_empty() {
@@ -234,6 +235,7 @@ pub async fn ui_updater(
                 aileron_controls_position: *aileron_deflection,
                 rudder_controls_position: simulator_vars.rudder_controls_position,
                 elevator_controls_position: simulator_vars.elevator_controls_position,
+                spoiler_handle_0_to_100: simulator_vars.spoiler_handle_0_to_100,
             }
         }
 

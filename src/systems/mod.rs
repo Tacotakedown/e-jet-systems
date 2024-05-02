@@ -1,3 +1,4 @@
+use once_cell::sync::Lazy;
 use std::time::Duration;
 use std::{sync::Arc, time::Instant};
 use tokio::sync::Mutex;
@@ -478,10 +479,10 @@ pub async fn flight_controls(mutex_vars: MutexVariables) {
         unsafe { LANDING_CONFIG },
     );
 
-    static mut PREV_TIME: Instant = Instant::now();
+    static mut LAST_TIME: Lazy<Instant> = Lazy::new(|| Instant::now());
     loop {
         let current_time = Instant::now();
-        let dt = unsafe { current_time.duration_since(unsafe { PREV_TIME }) };
+        let dt = unsafe { current_time.duration_since(unsafe { *LAST_TIME }) };
         let mut simulator_vars = mutex_vars.read_simulator_variables().await;
         let mut hydraulic_vars = mutex_vars.read_hydraulic_vars().await;
         flt_controls.update(
@@ -496,6 +497,6 @@ pub async fn flight_controls(mutex_vars: MutexVariables) {
 
         mutex_vars.write_simulator_variables(simulator_vars);
 
-        unsafe { PREV_TIME = current_time };
+        unsafe { *LAST_TIME = current_time };
     }
 }

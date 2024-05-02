@@ -55,6 +55,7 @@ async fn main() {
             aileron_controls_position: 0.0,
             elevator_controls_position: 0.0,
             rudder_controls_position: 0.0,
+            spoiler_handle_0_to_100: 0.0,
         },
         HydraulicVars {
             system1: System1Vars {
