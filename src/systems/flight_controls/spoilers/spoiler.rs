@@ -20,7 +20,3 @@ impl Spoiler {
 
     pub fn update(&self, pressure_psi: f64, dt: Duration) {}
 }
-
-fn get_actuator_speed(pressure: f64, density: f64, area: f64, coefficent: f64) -> f64 {
-    (2.0 * pressure) / (density * area * coefficent)
-}

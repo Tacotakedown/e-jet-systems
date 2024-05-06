@@ -1,3 +1,6 @@
+// rip linux development with this implementation
+
+use simconnect;
 use std::env::Vars;
 
 use crate::mutex::{self, MutexVariables};
@@ -29,4 +32,24 @@ impl Simconnect {
             tokio::time::sleep(tokio::time::Duration::from_millis(13)).await;
         }
     }
+}
+
+pub async fn sinconnect_interface(mutex_vars: MutexVariables) {
+    let connection = simconnect::SimConnector::new();
+    connection.connect("Ouroboros Simconnect");
+
+    // data defs for all the simvars:
+    connection.add_data_definition(
+        0,
+        "PLANE HEADING",
+        "Degrees",
+        simconnect::SIMCONNECT_DATATYPE_SIMCONNECT_DATATYPE_FLOAT64,
+        u32::MAX,
+        0.0,
+    );
+
+    loop {
+        unimplemented!();
+    }
+    tokio::time::sleep(tokio::time::Duration::from_millis(16));
 }
