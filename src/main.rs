@@ -75,19 +75,19 @@ async fn main() {
     let brake_thread = tokio::spawn(brake_system());
     let electrical_thread = tokio::spawn(electrical());
     let hydraulic_thread = tokio::spawn(hydraulic_system(mutex_vars.clone()));
-    let flight_control = tokio::spawn(flight_controls(mutex_vars.clone()));
+    let flight_control_thread = tokio::spawn(flight_controls(mutex_vars.clone()));
 
     let api_thread = tokio::spawn(api_factory());
     #[cfg(target_os = "windows")]
     let simvar_update_thread = tokio::spawn(simconnect_thread_fn(mutex_vars.clone()));
 
     #[cfg(not(target_os = "windows"))]
-    let simvar_update_thread = tokio::task::spawn(simconnect_thread_fn(mutex_vars.clone()));
+    let simvar_update_thread = tokio::spawn(simconnect_thread_fn(mutex_vars.clone()));
 
     println!("REST API server running on port 3030");
 
     #[cfg(feature = "gui")]
-    let ui_updater_handle = tokio::spawn(ui_updater(
+    let ui_updater_thread = tokio::spawn(ui_updater(
         mutex_vars.clone(),
         gui.clone(),
         data_mutex.clone(),
@@ -96,8 +96,10 @@ async fn main() {
     ));
 
     #[cfg(not(feature = "gui"))]
-    let ui_updater_handle = tokio::spawn(async move {});
+    let ui_updater_thread = tokio::spawn(async move {});
 
+    #[cfg(feature = "gui")]
+    println!("Spawned all system threads, Blocking on GUI");
     #[cfg(feature = "gui")]
     if let Err(err) = render_gui
         .render(
@@ -110,14 +112,17 @@ async fn main() {
     {
         eprintln!("Error rendering GUI: {:?}", err);
     }
+    //we can block here because each thread is a infinite loop so the following code is essentially useless
+
+    println!("spawned all threads, No blocking");
 
     let _ = tokio::try_join!(
         brake_thread,
         electrical_thread,
         hydraulic_thread,
         api_thread,
-        ui_updater_handle,
-        flight_control,
+        ui_updater_thread,
+        flight_control_thread,
         simvar_update_thread
     );
 }
