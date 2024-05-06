@@ -4,7 +4,7 @@
 use std::{io::Bytes, sync::Arc};
 use tokio::sync::Mutex;
 
-use crate::simconnect::simvars::{Simvars, Units};
+use crate::simconnect_interface::simvars::{Simvars, Units};
 
 #[derive(Debug, Clone)]
 pub struct MutexVariables {

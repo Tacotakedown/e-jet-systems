@@ -15,4 +15,6 @@ once_cell = "1.19.0"
 eframe = "0.27.2"
 futures = "0.3.30"
 egui_plot = "0.27.2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
 simconnect = "=0.3.0"

@@ -9,7 +9,7 @@ use crate::mutex::{
     BusVoltages, ElectricState, HydraulicVars, MutexVariables, SimulatorVariables, System1Vars,
 };
 use crate::server::api_factory;
-use crate::simconnect_interface::sinconnect_interface;
+use crate::simconnect_interface::simconnect_interface_mod::simconnect_thread_fn;
 use crate::systems::{brake_system, electrical, flight_controls, hydraulic_system};
 
 mod debug_gui;
@@ -73,7 +73,11 @@ async fn main() {
     let flight_control = tokio::spawn(flight_controls(mutex_vars.clone()));
 
     let api_thread = tokio::spawn(api_factory());
-    let simvar_update_thread = task::spawn(sinconnect_interface(mutex_vars.clone()));
+    #[cfg(target_os = "windows")]
+    let simvar_update_thread = tokio::spawn(simconnect_thread_fn(mutex_vars.clone()));
+
+    #[cfg(not(target_os = "windows"))]
+    let simvar_update_thread = tokio::task::spawn(simconnect_thread_fn(mutex_vars.clone()));
 
     println!("REST API server running on port 3030");
 
