@@ -20,16 +20,21 @@ mod systems;
 
 #[tokio::main]
 async fn main() {
+    #[cfg(feature = "gui")]
     let gui = Arc::new(Mutex::new(DebugGui::new(
         400.0,
         300.0,
         "Systems".to_string(),
     )));
 
+    #[cfg(feature = "gui")]
     let data_mutex = Arc::new(Mutex::new(HashMap::new()));
+    #[cfg(feature = "gui")]
     let button_mutex = Arc::new(Mutex::new(HashMap::new()));
+    #[cfg(feature = "gui")]
     let gui_simvar_mutex = Arc::new(Mutex::new(HashMap::new()));
 
+    #[cfg(feature = "gui")]
     let mut render_gui = DebugGui::new(1800.0, 1000.0, "Systems".to_string());
 
     let mutex_vars = MutexVariables::new(
@@ -81,6 +86,7 @@ async fn main() {
 
     println!("REST API server running on port 3030");
 
+    #[cfg(feature = "gui")]
     let ui_updater_handle = tokio::spawn(ui_updater(
         mutex_vars.clone(),
         gui.clone(),
@@ -89,6 +95,10 @@ async fn main() {
         gui_simvar_mutex.clone(),
     ));
 
+    #[cfg(not(feature = "gui"))]
+    let ui_updater_handle = tokio::spawn(async move {});
+
+    #[cfg(feature = "gui")]
     if let Err(err) = render_gui
         .render(
             gui.clone(),
