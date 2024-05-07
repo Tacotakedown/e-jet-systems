@@ -3,6 +3,8 @@ use self::{
     brake_materials::BrakeMaterials, pressure_plate::PressurePlate, stator::Stator,
 };
 
+use crate::mutex::MutexVariables;
+
 pub mod actuator;
 pub mod brake_assembly;
 pub mod brake_location;
@@ -71,7 +73,20 @@ impl BrakeSystem {
         self
     }
 
-    pub fn calculate(self) {
-        // TODO: brake calculations, may need to expose some more functions for each component of system
+    pub fn calculate(
+        self,
+        mutex_vars: MutexVariables,
+        fluid_density: f64,
+        pressure_sys1_psi: f64,
+        pressure_sys2_psi: f64,
+    ) {
+
+        // we will fist calculate the force produced by the actuator, this will then allow us to calculate friction (brake force) and heat generation (based on specific heat)
+
+        // finding force is done using F = pressure * area, we are working in PSI thus the resultant force will be in pounds, however we need to first implement a pcu so that we dont go from 0% brakes to max brakes in one tick
     }
+}
+
+fn brake_pcu(pedal_position: f64) -> f64 {
+    todo!()
 }

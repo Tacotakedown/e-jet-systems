@@ -1,8 +1,5 @@
-use eframe::egui::MultiTouchInfo;
-use futures::executor::block_on;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tokio::task;
 
 use crate::debug_gui::{ui_updater, DebugGui};
 use crate::mutex::{
@@ -72,7 +69,7 @@ async fn main() {
         },
     );
 
-    let brake_thread = tokio::spawn(brake_system());
+    let brake_thread = tokio::spawn(brake_system(mutex_vars.clone()));
     let electrical_thread = tokio::spawn(electrical());
     let hydraulic_thread = tokio::spawn(hydraulic_system(mutex_vars.clone()));
     let flight_control_thread = tokio::spawn(flight_controls(mutex_vars.clone()));
