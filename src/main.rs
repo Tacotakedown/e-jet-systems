@@ -1,8 +1,5 @@
-use eframe::egui::MultiTouchInfo;
-use futures::executor::block_on;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tokio::task;
 
 use crate::debug_gui::{ui_updater, DebugGui};
 use crate::mutex::{
@@ -120,6 +117,7 @@ async fn main() {
         brake_thread,
         electrical_thread,
         hydraulic_thread,
+        api_thread,
         flight_control_thread,
         simvar_update_thread,
         ui_updater_thread

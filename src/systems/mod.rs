@@ -495,8 +495,9 @@ pub async fn flight_controls(mutex_vars: MutexVariables) {
             dt,
         );
 
-        mutex_vars.write_simulator_variables(simulator_vars);
+        mutex_vars.write_simulator_variables(simulator_vars).await;
 
         unsafe { *LAST_TIME = current_time };
+        sleep(TICK_SLEEP_DURATION).await;
     }
 }

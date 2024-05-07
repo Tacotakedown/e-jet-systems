@@ -48,10 +48,12 @@ pub mod simconnect_interface_mod {
             u32::MAX,
             0.0,
         );
-
+        let mut value: u32 = 42; // Example value
+        let error: *mut u32 = &mut value as *mut u32;
         loop {
             // todo!();
-            tokio::time::sleep(tokio::time::Duration::from_millis(16));
+
+            std::thread::sleep(tokio::time::Duration::from_millis(13));
         }
     }
 }
