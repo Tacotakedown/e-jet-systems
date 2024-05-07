@@ -20,7 +20,7 @@ futures = "0.3.30"
 egui_plot = "0.27.2"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-simconnect = "=0.3.0"
+simconnect = {git = "https://github.com/Tacotakedown/simconnect-rust"}
 
 [features]
 gui = []
