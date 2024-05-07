@@ -7,8 +7,6 @@ pub mod simconnect_interface_mod {
 
     use crate::mutex::{self, MutexVariables};
 
-    pub mod simvars;
-
     #[derive(Debug)]
     pub struct Simconnect {
         id: String,
@@ -37,8 +35,8 @@ pub mod simconnect_interface_mod {
         }
     }
 
-    pub async fn simconnect_interface(mutex_vars: MutexVariables) {
-        let connection = simconnect::SimConnector::new();
+    pub async fn simconnect_thread_fn(mutex_vars: MutexVariables) {
+        let mut connection = simconnect::SimConnector::new();
         connection.connect("Ouroboros Simconnect");
 
         // data defs for all the simvars:
@@ -50,11 +48,13 @@ pub mod simconnect_interface_mod {
             u32::MAX,
             0.0,
         );
-
+        let mut value: u32 = 42; // Example value
+        let error: *mut u32 = &mut value as *mut u32;
         loop {
-            unimplemented!();
+            // todo!();
+
+            std::thread::sleep(tokio::time::Duration::from_millis(13));
         }
-        tokio::time::sleep(tokio::time::Duration::from_millis(16));
     }
 }
 

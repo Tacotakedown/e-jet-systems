@@ -113,13 +113,20 @@ async fn main() {
 
     println!("spawned all threads, No blocking");
 
-    let _ = tokio::try_join!(
+    let join_res = tokio::try_join!(
         brake_thread,
         electrical_thread,
         hydraulic_thread,
         api_thread,
-        ui_updater_thread,
         flight_control_thread,
-        simvar_update_thread
+        simvar_update_thread,
+        ui_updater_thread
     );
+
+    match join_res {
+        Ok(_) => {}
+        Err(e) => {
+            eprintln!("thread join error, its amazing that the code got this far, you really broke it bad: {}",e)
+        }
+    }
 }
