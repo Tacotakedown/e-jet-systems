@@ -20,6 +20,7 @@ fn main() {
     if !target_dll_path.exists() {
         let source_files = vec![dll_path.to_str().unwrap().to_string()];
         let options = CopyOptions::new();
+        #[cfg(target_os = "windows")]
         if let Err(err) = fs_extra::copy_items(&source_files, &target_dir, &options) {
             eprintln!("Error copying DLL: {}", err);
         }
