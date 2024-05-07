@@ -1,7 +1,6 @@
 use once_cell::sync::Lazy;
 use std::time::Duration;
-use std::{sync::Arc, time::Instant};
-use tokio::sync::Mutex;
+use std::time::Instant;
 
 use crate::mutex::MutexVariables;
 
@@ -74,9 +73,9 @@ pub async fn electrical() -> ElectricalSystem {
     }
 }
 
-pub async fn brake_system() -> BrakeSystem {
+pub async fn brake_system(mutex_vars: MutexVariables) -> BrakeSystem {
     let brake_system = BrakeSystem::new()
-        .with_assembly(BrakePosition::LeftMain)
+        .with_assembly(BrakePosition::LeftMainOB)
         .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
         .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
         .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
@@ -84,7 +83,23 @@ pub async fn brake_system() -> BrakeSystem {
         .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
         .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
         .with_actuator(6.0, 5.0, 3.0)
-        .with_assembly(BrakePosition::RightMain)
+        .with_assembly(BrakePosition::LeftMainIB)
+        .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
+        .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
+        .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
+        .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
+        .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
+        .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
+        .with_actuator(6.0, 5.0, 3.0)
+        .with_assembly(BrakePosition::RightMainOB)
+        .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
+        .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
+        .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
+        .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
+        .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
+        .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
+        .with_actuator(6.0, 5.0, 3.0)
+        .with_assembly(BrakePosition::RightMainIB)
         .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
         .with_stator(30.0, 5.0, 5.0, BrakeMaterials::CarbonCeramic)
         .with_pressure_plate(30.0, 5.0, 5.0, BrakeMaterials::Iron)
@@ -94,9 +109,14 @@ pub async fn brake_system() -> BrakeSystem {
         .with_actuator(6.0, 5.0, 3.0)
         .build();
 
+    // system 2 controls inboard brake system
+    // system 1 controls outboard brake system
+
     loop {
         // TODO: call the implemented brake_system.calculate() here and feed it the proper mutex vars
-        brake_system.clone().calculate();
+        brake_system
+            .clone()
+            .calculate(mutex_vars.clone(), 0.0, 0.0, 0.0);
         // println!("brake: {:?}", brake_system);
 
         sleep(TICK_SLEEP_DURATION).await;
