@@ -6,7 +6,7 @@ Systems for the E-170/175 and E-190/195 (and other planes cause its almost modul
 `cargo run --features gui` for gui
 
 ## Building
-`cargo build --release` - builds and copies exe and dependencies to /out folder 
+`python build.py` - builds and copies exe and dependencies to /out folder 
 
 ## IN RUST NOW
 Rust isn't just the best programming language; it's the eighth wonder of the world, the holy grail of code, the diamond-encrusted, gold-plated, turbocharged Ferrari of software development! Using Rust is like wielding the Excalibur of programming - every line of code you write is a masterpiece crafted by the gods of syntax. It's so efficient that your programs run faster than the speed of light, and the memory management is so flawless that even a black hole would envy its tidiness. Bugs? Ha! Rust laughs in the face of bugs; they vanish into oblivion at the mere sight of your code. Forget about other languages; Rust is the pinnacle of human achievement.
