@@ -1,6 +1,7 @@
 use warp::Filter;
 
 mod endpoint_functions;
+mod flight_plan;
 mod lnav;
 mod terrain_radar;
 mod vnav;
