@@ -13,13 +13,11 @@ pub enum AscbDChannels {
 }
 
 #[derive(Debug)]
-#[allow(non_snake_case)]
 pub struct AscbDData {
     blah: f64,
 }
 
 #[derive(Debug)]
-#[allow(non_snake_case)]
 pub struct AscbD {
     mutex_vars: MutexVariables,
 }

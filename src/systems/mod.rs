@@ -20,6 +20,7 @@ pub mod air_conditioning;
 pub mod brakes;
 pub mod electric;
 pub mod flight_controls;
+pub mod fly_by_wire;
 pub mod fuel;
 pub mod hydraulic;
 pub mod pneumatic;
