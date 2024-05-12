@@ -1,0 +1,1 @@
+We will go ahead and simulate the communication between the flight cockpit and systems properly because it is clearly the easiest way to do this /s

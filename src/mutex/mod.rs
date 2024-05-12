@@ -1,7 +1,7 @@
 /*
 * structs for all the mutex variables
 */
-use std::{io::Bytes, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use crate::simconnect_interface::simvars::{Simvars, Units};
@@ -37,6 +37,10 @@ impl MutexVariables {
         self.hydraulic_vars.lock().await.clone()
     }
 
+    pub async fn read_ascb_vars(&self) {
+        todo!()
+    }
+
     pub async fn write_bus_voltages(&self, bus_voltage: BusVoltages) {
         let mut locked = self.bus_voltage.lock().await;
         *locked = bus_voltage
@@ -50,6 +54,10 @@ impl MutexVariables {
     pub async fn write_hydraulic_vars(&self, hydraulic_vars: HydraulicVars) {
         let mut locked = self.hydraulic_vars.lock().await;
         *locked = hydraulic_vars
+    }
+
+    pub async fn write_ascb_vars(&self /*todo */) {
+        todo!()
     }
 }
 
