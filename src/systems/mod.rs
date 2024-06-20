@@ -18,6 +18,7 @@ use tokio::time::sleep;
 
 pub mod air_conditioning;
 pub mod brakes;
+pub mod cabin_utils;
 pub mod electric;
 pub mod flight_controls;
 pub mod fly_by_wire;
